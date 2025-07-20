@@ -1,0 +1,24 @@
+{
+  "name": "capability-gym",
+  "version": "1.0.0",
+  "description": "Management training simulator - First you aspire, then you soar",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server -p 8000 -c-1",
+    "dev": "npx live-server --port=8000",
+    "build": "echo 'No build step required for static site'"
+  },
+  "keywords": [
+    "management",
+    "training",
+    "leadership",
+    "simulation",
+    "coaching"
+  ],
+  "author": "CapabilityGym Team",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "live-server": "^1.2.2"
+  }
+}

@@ -1,0 +1,214 @@
+.gradient-bg {
+    background: linear-gradient(135deg, #4C62E3 0%, #3B4FCC 100%);
+}
+
+.card-hover {
+    transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(76, 98, 227, 0.15);
+}
+
+.pulse-animation {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.typewriter {
+    overflow: hidden;
+    border-right: .15em solid #4C62E3;
+    white-space: nowrap;
+    margin: 0 auto;
+    letter-spacing: .15em;
+    animation: typing 3.5s steps(40, end), blink-caret .75s step-end infinite;
+}
+
+@keyframes typing {
+    from { width: 0 }
+    to { width: 100% }
+}
+
+@keyframes blink-caret {
+    from, to { border-color: transparent }
+    50% { border-color: #4C62E3; }
+}
+
+.bounce-in {
+    animation: bounceIn 0.6s ease-out;
+}
+
+@keyframes bounceIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.05); }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.screen {
+    display: block;
+}
+
+.screen.hidden {
+    display: none;
+}
+
+/* Checkbox styling for onboarding */
+.goal-option:hover .goal-checkbox {
+    border-color: #4C62E3;
+}
+
+.goal-option.selected .goal-checkbox {
+    background-color: #4C62E3;
+    border-color: #4C62E3;
+}
+
+.goal-option.selected .goal-checkbox svg {
+    display: block !important;
+}
+
+/* Experience/Industry/Team option styling */
+.experience-option.selected,
+.industry-option.selected,
+.team-option.selected {
+    border-color: #4C62E3;
+    background-color: rgba(76, 98, 227, 0.1);
+}
+
+/* Scenario card styling */
+.scenario-card {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.scenario-card:hover {
+    border-color: #4C62E3;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(76, 98, 227, 0.1);
+}
+
+/* Progress bars */
+.progress-bar {
+    background-color: #e5e7eb;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    background-color: #4C62E3;
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+/* Chat interface styling */
+.chat-container {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.message {
+    margin-bottom: 1rem;
+    animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message.user {
+    text-align: right;
+}
+
+.message.ai {
+    text-align: left;
+}
+
+.message-bubble {
+    display: inline-block;
+    max-width: 80%;
+    padding: 12px 16px;
+    border-radius: 18px;
+    word-wrap: break-word;
+}
+
+.message.user .message-bubble {
+    background-color: #4C62E3;
+    color: white;
+}
+
+.message.ai .message-bubble {
+    background-color: #f3f4f6;
+    color: #1f2937;
+}
+
+.dark .message.ai .message-bubble {
+    background-color: #374151;
+    color: #f9fafb;
+}
+
+/* Loading animation */
+.loading-dots {
+    display: inline-flex;
+    align-items: center;
+}
+
+.loading-dots span {
+    width: 6px;
+    height: 6px;
+    background-color: #9ca3af;
+    border-radius: 50%;
+    margin: 0 2px;
+    animation: loadingDots 1.4s infinite ease-in-out;
+}
+
+.loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+.loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes loadingDots {
+    0%, 80%, 100% {
+        transform: scale(0);
+    }
+    40% {
+        transform: scale(1);
+    }
+}
+
+/* Responsive design improvements */
+@media (max-width: 768px) {
+    .typewriter {
+        font-size: 1rem;
+    }
+    
+    .bounce-in h1 {
+        font-size: 2.5rem;
+    }
+    
+    .grid-cols-1.md\\:grid-cols-2 {
+        grid-template-columns: 1fr;
+    }
+    
+    .grid-cols-1.md\\:grid-cols-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Dark mode specific adjustments */
+.dark .gradient-bg {
+    background: linear-gradient(135deg, #3B4FCC 0%, #2D3A9F 100%);
+}
+
+.dark .card-hover:hover {
+    box-shadow: 0 12px 24px rgba(76, 98, 227, 0.25);
+}
