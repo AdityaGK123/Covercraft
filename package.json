@@ -4,8 +4,7 @@
   "description": "Management training simulator - First you aspire, then you soar",
   "main": "index.html",
   "scripts": {
-    "build": "node build.js",
-    "start": "python -m http.server 8000",
+    "start": "npx http-server -p 8080 -c-1",
     "serve": "npx http-server -p 8080 -c-1"
   },
   "keywords": [
