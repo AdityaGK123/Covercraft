@@ -1,0 +1,9 @@
+{
+  "name": "capability-gym-functions",
+  "version": "1.0.0",
+  "description": "Cloudflare Pages Functions for CapabilityGym",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'No build required - static site'"
+  }
+}

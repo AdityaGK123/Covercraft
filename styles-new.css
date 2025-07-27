@@ -135,11 +135,11 @@ body {
     color: var(--charcoal-soft);
 }
 
-/* Enhanced Tactile Button System */
+/* Tactile Button System */
 .btn-organic {
     font-family: var(--font-display);
     font-weight: 600;
-    padding: var(--space-md) var(--space-lg);
+    padding: var(--space-sm) var(--space-lg);
     border: none;
     border-radius: 12px;
     cursor: pointer;
@@ -151,15 +151,8 @@ body {
     align-items: center;
     justify-content: center;
     gap: var(--space-xs);
-    box-shadow: var(--shadow-medium);
+    box-shadow: var(--shadow-soft);
     transform: translateY(0);
-    min-height: 44px;
-    font-size: 1rem;
-    line-height: 1.2;
-    text-align: center;
-    white-space: nowrap;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
 }
 
 .btn-organic:hover {
@@ -175,13 +168,6 @@ body {
 .btn-primary {
     background: var(--gradient-earth);
     color: var(--cream-natural);
-    border: 2px solid transparent;
-}
-
-.btn-primary:hover {
-    background: var(--soil-rich);
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-strong);
 }
 
 .btn-secondary {
@@ -190,34 +176,15 @@ body {
     border: 2px solid var(--clay-warm);
 }
 
-.btn-secondary:hover {
-    background: var(--clay-warm);
-    color: var(--cream-natural);
-    border-color: var(--soil-rich);
-}
-
 .btn-accent {
     background: var(--gradient-brand);
     color: white;
-    border: 2px solid transparent;
-}
-
-.btn-accent:hover {
-    background: var(--hipo-blue);
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-strong);
 }
 
 .btn-ghost {
     background: transparent;
     color: var(--moss-gentle);
     border: 2px solid var(--moss-gentle);
-}
-
-.btn-ghost:hover {
-    background: var(--moss-gentle);
-    color: var(--cream-natural);
-    border-color: var(--wood-deep);
 }
 
 /* Asymmetric Card System */
@@ -573,9 +540,8 @@ body {
 .slide-in-left { animation: slideInLeft 0.6s ease-out; }
 .fade-in-up { animation: fadeInUp 0.6s ease-out; }
 
-/* Enhanced Mobile Optimization */
+/* Responsive - Mobile First */
 @media (max-width: 768px) {
-    /* Layout Adjustments */
     .grid-asymmetric {
         grid-template-columns: 1fr;
         gap: var(--space-md);
@@ -592,135 +558,16 @@ body {
     }
     
     .welcome-actions {
-        gap: var(--space-md);
-    }
-    
-    .stats-organic {
-        grid-template-columns: repeat(2, 1fr);
         gap: var(--space-sm);
-    }
-    
-    /* Navigation Mobile Optimization */
-    .nav-organic {
-        padding: var(--space-sm) 0;
     }
     
     .nav-content {
         flex-direction: column;
         gap: var(--space-sm);
-        align-items: center;
-    }
-    
-    .nav-links {
-        display: none; /* Hidden by default on mobile */
-        flex-direction: column;
-        gap: var(--space-sm);
-        width: 100%;
-        text-align: center;
-    }
-    
-    .nav-links.active {
-        display: flex;
-    }
-    
-    /* Button Mobile Optimization */
-    .btn-organic {
-        min-height: 48px; /* Touch-friendly size */
-        font-size: 1rem;
-        padding: var(--space-md) var(--space-lg);
-        margin: var(--space-xs) 0;
-    }
-    
-    /* Typography Mobile */
-    .heading-display {
-        font-size: clamp(2rem, 6vw, 3rem);
-        line-height: 1.2;
-    }
-    
-    .heading-section {
-        font-size: clamp(1.25rem, 4vw, 1.75rem);
-    }
-    
-    /* Card Mobile Optimization */
-    .card-organic {
-        padding: var(--space-md);
-        margin-bottom: var(--space-md);
-    }
-    
-    /* Chat Interface Mobile */
-    .chat-container {
-        height: 400px;
-        padding: var(--space-md);
-    }
-    
-    .message-bubble {
-        max-width: 85%;
-        font-size: 0.95rem;
-    }
-    
-    .chat-input {
-        font-size: 16px; /* Prevents zoom on iOS */
-        padding: var(--space-md);
-    }
-    
-    /* Welcome Screen Mobile */
-    .welcome-content {
-        padding: var(--space-lg) var(--space-md);
-    }
-    
-    .welcome-content h1 {
-        font-size: clamp(2.5rem, 8vw, 4rem);
-    }
-    
-    .tagline {
-        font-size: clamp(1rem, 4vw, 1.5rem);
-    }
-}
-
-/* Small Mobile Devices */
-@media (max-width: 480px) {
-    .container-organic {
-        padding: 0 var(--space-sm);
-    }
-    
-    .card-organic {
-        padding: var(--space-sm);
-    }
-    
-    .btn-organic {
-        width: 100%;
-        margin: var(--space-xs) 0;
     }
     
     .stats-organic {
-        grid-template-columns: 1fr;
-    }
-    
-    .stat-card {
-        transform: none; /* Remove rotation on small screens */
-    }
-    
-    .scenario-card {
-        padding: var(--space-md);
-    }
-    
-    .welcome-actions {
-        gap: var(--space-sm);
-    }
-}
-
-/* Large Mobile/Tablet */
-@media (min-width: 769px) and (max-width: 1024px) {
-    .scenario-grid {
         grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .stats-organic {
-        grid-template-columns: repeat(4, 1fr);
-    }
-    
-    .dashboard-grid {
-        grid-template-columns: 1fr 1.5fr;
     }
 }
 

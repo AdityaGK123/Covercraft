@@ -1,0 +1,12 @@
+name = "capability-gym"
+compatibility_date = "2024-01-15"
+
+# Static site configuration
+[site]
+bucket = "."
+
+# No build required for static HTML/CSS/JS
+[build]
+command = ""
+cwd = ""
+watch_dir = ""

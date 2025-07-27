@@ -65,20 +65,25 @@ class CapabilityGym {
         mainContent.innerHTML = `
             <div id="welcomeScreen" class="screen">
                 <div class="gradient-bg min-h-screen flex items-center justify-center px-4">
-                    <div class="max-w-4xl mx-auto text-center text-white">
-                        <div class="mb-8 bounce-in">
-                            <img src="https://pfst.cf2.poecdn.net/base/image/eb63654998c09d616a58479f033d1e8a4cb3e9b87fef05ddc3f9c53f41d82a5d?w=3391&h=760" alt="HiPo Logo" class="h-20 w-auto mx-auto mb-6 brightness-0 invert">
-                            <h1 class="font-montserrat text-4xl md:text-6xl font-bold mb-4">CapabilityGym</h1>
-                            <div class="typewriter font-karla text-xl opacity-90 mb-8">First you aspire, then you soar</div>
-                            <p class="font-karla text-lg opacity-90 mb-8 max-w-2xl mx-auto">Practice real management scenarios with AI-powered simulations. Build confidence, develop skills, and unlock your leadership potential.</p>
+                    <div class="welcome-content bounce-in">
+                        <div class="mb-8">
+                            <h1 class="font-display text-6xl font-bold mb-4">CapabilityGym</h1>
+                            <div class="tagline font-accent text-2xl mb-8">First you aspire, then you soar ✨</div>
+                            <p class="text-body text-lg opacity-90 mb-8 max-w-2xl mx-auto text-white">
+                                Practice real management scenarios with AI-powered simulations. 
+                                Build confidence, develop skills, and unlock your leadership potential.
+                            </p>
                         </div>
                         
-                        <div class="space-y-4 max-w-md mx-auto">
-                            <button onclick="app.startOnboarding()" class="w-full bg-white text-hipo-blue font-montserrat font-semibold py-4 px-8 rounded-xl hover:bg-gray-100 transition-all transform hover:scale-105">
-                                Begin Your Journey
+                        <div class="welcome-actions">
+                            <button onclick="window.app.startOnboarding()" class="btn-organic btn-primary w-full py-4 text-lg font-semibold">
+                                🚀 Begin Your Journey
                             </button>
-                            <button onclick="app.showDashboard()" class="w-full border-2 border-white text-white font-montserrat font-semibold py-4 px-8 rounded-xl hover:bg-white hover:bg-opacity-20 transition-all">
-                                Continue Learning
+                            <button onclick="window.app.showDashboard()" class="btn-organic btn-secondary w-full py-4 text-lg font-semibold">
+                                📚 Continue Learning
+                            </button>
+                            <button onclick="window.app.showScenarioLibrary()" class="btn-organic btn-ghost w-full py-3 text-white border-white">
+                                🎯 Browse Scenarios
                             </button>
                         </div>
                     </div>
@@ -117,7 +122,7 @@ class CapabilityGym {
                                     <p class="font-karla text-sm text-gray-600 dark:text-gray-400">Dynamic conversations that adapt to your management style</p>
                                 </div>
                             </div>
-                            <button onclick="app.nextTutorialStep()" class="mt-6 bg-hipo-blue text-white font-montserrat font-semibold px-6 py-3 rounded-lg hover:bg-opacity-90 transition-colors">
+                            <button onclick="window.app.nextTutorialStep()" class="btn-organic btn-primary mt-6">
                                 Next: See How It Works
                             </button>
                         </div>
@@ -139,7 +144,7 @@ class CapabilityGym {
                                     </div>
                                 </div>
                             </div>
-                            <button onclick="app.nextTutorialStep()" class="bg-hipo-blue text-white font-montserrat font-semibold px-6 py-3 rounded-lg hover:bg-opacity-90 transition-colors">
+                            <button onclick="window.app.nextTutorialStep()" class="btn-organic btn-primary">
                                 Next: Get Feedback
                             </button>
                         </div>
@@ -163,7 +168,7 @@ class CapabilityGym {
                                     <div class="text-sm font-karla text-gray-600 dark:text-gray-400">Feedback Grade</div>
                                 </div>
                             </div>
-                            <button onclick="app.finishTutorial()" class="bg-hipo-blue text-white font-montserrat font-semibold px-6 py-3 rounded-lg hover:bg-opacity-90 transition-colors">
+                            <button onclick="window.app.finishTutorial()" class="btn-organic btn-primary">
                                 Start My Assessment
                             </button>
                         </div>
@@ -195,51 +200,50 @@ class CapabilityGym {
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- AI Status Banner -->
                     ${!aiEnabled ? `
-                    <div class="bg-yellow-50 dark:bg-yellow-900 dark:bg-opacity-20 border border-yellow-200 dark:border-yellow-700 rounded-xl p-4 mb-8">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 bg-yellow-100 dark:bg-yellow-800 rounded-full flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="font-montserrat font-semibold text-yellow-800 dark:text-yellow-200">AI Features Disabled</h3>
-                                    <p class="font-karla text-sm text-yellow-700 dark:text-yellow-300">Enable AI-powered scenarios for interactive conversations</p>
+                    <div class="card-organic mb-8 bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-400">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center">
+                                    <span class="text-2xl">⚡</span>
                                 </div>
                             </div>
-                            <button onclick="window.configManager.showApiKeySetup()" class="bg-yellow-600 hover:bg-yellow-700 text-white font-montserrat font-medium px-4 py-2 rounded-lg transition-colors">
-                                Setup AI
-                            </button>
+                            <div class="flex-1">
+                                <h3 class="heading-section text-yellow-800 mb-2">Unlock AI-Powered Learning</h3>
+                                <p class="text-body text-yellow-700 mb-4">
+                                    Enable AI to unlock dynamic scenario conversations, personalized coaching, and adaptive learning experiences.
+                                </p>
+                                <button onclick="window.configManager?.showApiKeySetup()" class="btn-organic btn-accent">
+                                    🚀 Setup AI Features
+                                </button>
+                            </div>
                         </div>
                     </div>
                     ` : `
-                    <div class="bg-green-50 dark:bg-green-900 dark:bg-opacity-20 border border-green-200 dark:border-green-700 rounded-xl p-4 mb-8">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="font-montserrat font-semibold text-green-800 dark:text-green-200">AI Features Enabled</h3>
-                                    <p class="font-karla text-sm text-green-700 dark:text-green-300">Interactive AI-powered scenarios are ready</p>
+                    <div class="card-organic mb-8 bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-400">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-green-400 rounded-full flex items-center justify-center">
+                                    <span class="text-2xl">✨</span>
                                 </div>
                             </div>
-                            <button onclick="window.configManager.showUsageStats()" class="bg-green-600 hover:bg-green-700 text-white font-montserrat font-medium px-4 py-2 rounded-lg transition-colors">
-                                View Usage
-                            </button>
+                            <div class="flex-1">
+                                <h3 class="heading-section text-green-800 mb-2">AI Features Active</h3>
+                                <p class="text-body text-green-700 mb-4">
+                                    AI-powered scenarios and coaching are ready! Start practicing with dynamic conversations.
+                                </p>
+                                <div class="flex gap-3">
+                                    <button onclick="window.configManager?.showUsageStats()" class="btn-organic btn-secondary">
+                                        📊 View Usage Stats
+                                    </button>
+                                    <button onclick="window.app.showScenarioLibrary()" class="btn-organic btn-primary">
+                                        🎯 Start Practicing
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     `}
-
-                    <!-- Progress Overview -->
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                         <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-hipo-grey card-hover">
                             <div class="flex items-center justify-between">
@@ -295,7 +299,7 @@ class CapabilityGym {
 
                     <!-- Quick Actions -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <button onclick="app.showScenarioLibrary()" class="gradient-bg text-white p-8 rounded-2xl hover:opacity-90 transition-all transform hover:scale-105 text-left">
+                        <button onclick="window.app.showScenarioLibrary()" class="card-organic bg-gradient-earth text-white p-6 text-left w-full">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <h3 class="font-montserrat font-bold text-xl mb-2">Practice Scenarios</h3>
@@ -307,7 +311,7 @@ class CapabilityGym {
                             </div>
                         </button>
                         
-                        <button onclick="app.showProgress()" class="bg-white dark:bg-gray-800 border-2 border-hipo-grey p-8 rounded-2xl hover:border-hipo-blue hover:shadow-lg transition-all text-left">
+                        <button onclick="window.app.showProgress()" class="card-organic p-6 text-left w-full">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <h3 class="font-montserrat font-bold text-xl mb-2">View Progress</h3>
@@ -319,7 +323,7 @@ class CapabilityGym {
                             </div>
                         </button>
                         
-                        <button onclick="window.configManager.showApiKeySetup()" class="bg-gradient-to-r from-hipo-coral to-orange-500 text-white p-8 rounded-2xl hover:shadow-lg transition-all transform hover:scale-105 text-left">
+                        <button onclick="window.configManager?.showApiKeySetup()" class="card-organic bg-gradient-brand text-white p-6 text-left w-full">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <h3 class="font-montserrat font-bold text-xl mb-2">${aiEnabled ? 'AI Settings' : 'Enable AI'}</h3>
@@ -404,7 +408,7 @@ class CapabilityGym {
                         <span class="text-xs font-karla text-hipo-blue">+${scenario.xp} XP</span>
                     </div>
                 </div>
-                <button onclick="app.startScenario('${scenario.id}')" class="bg-hipo-blue text-white font-montserrat font-medium px-6 py-3 rounded-lg hover:bg-opacity-90 transition-colors">
+                <button onclick="window.app.startScenario('${scenario.id}')" class="btn-organic btn-primary">
                     Start
                 </button>
             </div>
@@ -424,7 +428,7 @@ class CapabilityGym {
                             <h2 class="font-montserrat text-3xl font-bold mb-2">Scenario Library</h2>
                             <p class="font-karla text-gray-600 dark:text-gray-400">Practice real management situations with ${aiEnabled ? 'AI-powered' : 'structured'} simulations</p>
                         </div>
-                        <button onclick="app.showDashboard()" class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-montserrat font-medium px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                        <button onclick="window.app.showDashboard()" class="btn-organic btn-secondary">
                             Back to Dashboard
                         </button>
                     </div>
@@ -441,7 +445,7 @@ class CapabilityGym {
                                 <h3 class="font-montserrat font-semibold text-blue-800 dark:text-blue-200 mb-1">Enhanced Experience Available</h3>
                                 <p class="font-karla text-sm text-blue-700 dark:text-blue-300">Enable AI features for dynamic, personalized conversations in each scenario.</p>
                             </div>
-                            <button onclick="window.configManager.showApiKeySetup()" class="bg-blue-600 hover:bg-blue-700 text-white font-montserrat font-medium px-4 py-2 rounded-lg transition-colors">
+                            <button onclick="window.configManager?.showApiKeySetup()" class="btn-organic btn-primary">
                                 Enable AI
                             </button>
                         </div>
@@ -637,7 +641,7 @@ class CapabilityGym {
                                 </div>
                                 <p class="font-karla text-gray-600 dark:text-gray-400">${scenario.description}</p>
                             </div>
-                            <button onclick="app.showScenarioLibrary()" class="text-gray-400 hover:text-gray-600">
+                            <button onclick="window.app.showScenarioLibrary()" class="btn-organic btn-ghost text-sm">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
@@ -685,7 +689,7 @@ class CapabilityGym {
                                     onkeypress="if(event.key==='Enter') app.sendMessage()"
                                 >
                                 <button 
-                                    onclick="app.sendMessage()" 
+                                    onclick="window.app.sendMessage()" 
                                     class="bg-hipo-blue text-white font-montserrat font-medium px-6 py-3 rounded-lg hover:bg-opacity-90 transition-colors"
                                     ${!aiEnabled ? 'disabled' : ''}
                                 >
@@ -798,13 +802,49 @@ class CapabilityGym {
 
     // Show progress screen
     showProgress() {
-        this.showAlert('Progress tracking coming soon!');
+        const mainContent = document.getElementById('mainContent');
+        mainContent.innerHTML = `
+            <div id="progressScreen" class="screen" style="padding-top: 80px;">
+                <div class="container-organic">
+                    <div class="text-center mb-8">
+                        <h1 class="heading-display">Your Progress</h1>
+                        <p class="text-handwritten">Track your leadership journey</p>
+                    </div>
+                    
+                    <div class="card-organic text-center py-16">
+                        <div class="text-6xl mb-4">📊</div>
+                        <h2 class="heading-section mb-4">Progress Tracking Coming Soon!</h2>
+                        <p class="text-body mb-8">We're building detailed analytics and progress tracking features.</p>
+                        <button onclick="window.app.showDashboard()" class="btn-organic btn-primary">
+                            ← Back to Dashboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Add missing tutorial navigation functions
+    nextTutorialStep() {
+        this.state.tutorialStep++;
+        if (this.state.tutorialStep > 3) {
+            this.finishTutorial();
+        } else {
+            this.showTutorial();
+        }
+    }
+    
+    finishTutorial() {
+        this.showDashboard();
     }
 }
 
 // Global functions for onclick handlers
 function toggleMenu() {
-    console.log('Menu toggled');
+    const navLinks = document.querySelector('.nav-links');
+    if (navLinks) {
+        navLinks.classList.toggle('active');
+    }
 }
 
 // Initialize the app when DOM is loaded

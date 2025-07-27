@@ -28,35 +28,21 @@
     </script>
 </head>
 <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors font-karla">
-    <!-- Navigation -->
-    <nav class="bg-white dark:bg-gray-900 shadow-sm border-b border-hipo-grey">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center space-x-3">
-                    <img src="https://pfst.cf2.poecdn.net/base/image/eb63654998c09d616a58479f033d1e8a4cb3e9b87fef05ddc3f9c53f41d82a5d?w=3391&h=760" alt="HiPo Logo" class="h-10 w-auto">
-                    <div>
-                        <span class="font-montserrat font-bold text-xl text-hipo-blue">CapabilityGym</span>
-                        <p class="text-xs text-gray-600 dark:text-gray-400 font-karla">First you aspire, then you soar</p>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <div class="hidden sm:flex items-center space-x-4">
-                        <div class="flex items-center space-x-2">
-                            <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                            <span id="streakCount" class="font-karla font-medium">0</span>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <div class="w-3 h-3 bg-hipo-coral rounded-full"></div>
-                            <span id="xpCount" class="font-karla font-medium">0 XP</span>
-                        </div>
-                    </div>
-                    <button onclick="toggleMenu()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
+    <!-- Navigation - Organic Flow -->
+    <nav class="nav-organic">
+        <div class="nav-content">
+            <a href="#" class="logo-organic" onclick="app.showDashboard(); return false;">CapabilityGym</a>
+            <ul class="nav-links">
+                <li><a href="#" onclick="app.showDashboard(); return false;">Dashboard</a></li>
+                <li><a href="#" onclick="app.showScenarioLibrary(); return false;">Scenarios</a></li>
+                <li><a href="#" onclick="app.showProgress(); return false;">Progress</a></li>
+                <li><a href="#" onclick="window.configManager?.showUsageStats(); return false;">AI Stats</a></li>
+            </ul>
+            <button onclick="toggleMenu()" class="btn-organic btn-ghost md:hidden" aria-label="Toggle menu">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
         </div>
     </nav>
 
