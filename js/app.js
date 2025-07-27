@@ -31,7 +31,12 @@ class CapabilityGym {
             await window.configManager.initialize();
         }
         
-        this.showWelcomeScreen();
+        // Show appropriate screen based on user state
+        if (this.state.onboardingComplete) {
+            this.showSkillTree();
+        } else {
+            this.showWelcomeScreen();
+        }
         this.updateUI();
     }
 
@@ -62,6 +67,8 @@ class CapabilityGym {
 
     showWelcomeScreen() {
         const mainContent = document.getElementById('mainContent');
+        const hasCompletedOnboarding = this.state.onboardingComplete;
+        
         mainContent.innerHTML = `
             <div id="welcomeScreen" class="screen">
                 <div class="gradient-bg min-h-screen flex items-center justify-center px-4">
@@ -76,12 +83,21 @@ class CapabilityGym {
                         </div>
                         
                         <div class="welcome-actions">
-                            <button onclick="window.app.startOnboarding()" class="btn-organic btn-primary w-full py-4 text-lg font-semibold">
-                                🚀 Begin Your Journey
-                            </button>
-                            <button onclick="window.app.showDashboard()" class="btn-organic btn-secondary w-full py-4 text-lg font-semibold">
-                                📚 Continue Learning
-                            </button>
+                            ${!hasCompletedOnboarding ? `
+                                <button onclick="window.app.startOnboarding()" class="btn-organic btn-primary w-full py-4 text-lg font-semibold">
+                                    🚀 Begin Your Journey
+                                </button>
+                                <button onclick="window.app.showDashboard()" class="btn-organic btn-secondary w-full py-4 text-lg font-semibold">
+                                    📚 Continue Learning
+                                </button>
+                            ` : `
+                                <button onclick="window.app.showSkillTree()" class="btn-organic btn-primary w-full py-4 text-lg font-semibold">
+                                    🌳 My Learning Journey
+                                </button>
+                                <button onclick="window.app.showDashboard()" class="btn-organic btn-secondary w-full py-4 text-lg font-semibold">
+                                    📊 Dashboard
+                                </button>
+                            `}
                             <button onclick="window.app.showScenarioLibrary()" class="btn-organic btn-ghost w-full py-3 text-white border-white">
                                 🎯 Browse Scenarios
                             </button>
@@ -99,83 +115,202 @@ class CapabilityGym {
     showTutorial() {
         const mainContent = document.getElementById('mainContent');
         mainContent.innerHTML = `
-            <div id="tutorialScreen" class="screen">
-                <div class="max-w-4xl mx-auto px-4 py-8">
-                    <div class="text-center mb-8">
-                        <h2 class="font-montserrat text-3xl font-bold mb-4">Welcome to Your Management Journey</h2>
-                        <p class="font-karla text-gray-600 dark:text-gray-400">Let's take a quick tour to get you started</p>
+            <div id="tutorialScreen" class="screen" style="padding-top: 80px;">
+                <div class="container-organic">
+                    <div class="text-center mb-12">
+                        <h1 class="heading-display mb-4">Welcome to CapabilityGym ✨</h1>
+                        <p class="text-handwritten text-xl mb-2">Your personalized management training journey starts here</p>
+                        <p class="text-body opacity-80">Let's take 2 minutes to understand how this works and what makes you unique</p>
                     </div>
 
-                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-hipo-grey p-8">
+                    <div class="max-w-4xl mx-auto">
+                        <!-- Tutorial Step 1: How It Works -->
                         <div id="tutorialStep1" class="tutorial-step">
-                            <div class="flex items-center mb-6">
-                                <div class="w-12 h-12 bg-hipo-blue rounded-full flex items-center justify-center text-white font-montserrat font-bold text-xl mr-4">1</div>
-                                <h3 class="font-montserrat text-xl font-semibold">Choose Your Scenarios</h3>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div class="p-6 bg-gray-50 dark:bg-gray-700 rounded-xl">
-                                    <h4 class="font-montserrat font-semibold mb-2">Real Situations</h4>
-                                    <p class="font-karla text-sm text-gray-600 dark:text-gray-400">Practice with authentic management challenges you'll face in your career</p>
+                            <div class="card-organic mb-8">
+                                <div class="flex items-center mb-6">
+                                    <div class="w-16 h-16 bg-gradient-to-br from-moss-gentle to-sage-whisper rounded-full flex items-center justify-center text-white font-bold text-2xl mr-6 shadow-lg">1</div>
+                                    <div>
+                                        <h2 class="heading-section">How CapabilityGym Works</h2>
+                                        <p class="text-body opacity-80">Personalized, AI-powered management training</p>
+                                    </div>
                                 </div>
-                                <div class="p-6 bg-gray-50 dark:bg-gray-700 rounded-xl">
-                                    <h4 class="font-montserrat font-semibold mb-2">AI-Powered</h4>
-                                    <p class="font-karla text-sm text-gray-600 dark:text-gray-400">Dynamic conversations that adapt to your management style</p>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                    <div class="text-center p-6 bg-gradient-to-br from-moss-gentle/10 to-sage-whisper/10 rounded-2xl border border-moss-gentle/20">
+                                        <div class="text-4xl mb-4">🎯</div>
+                                        <h3 class="heading-subsection mb-2">Real Scenarios</h3>
+                                        <p class="text-body text-sm">Practice authentic management challenges you'll face in your career</p>
+                                    </div>
+                                    <div class="text-center p-6 bg-gradient-to-br from-sunset-warm/10 to-terracotta-earth/10 rounded-2xl border border-sunset-warm/20">
+                                        <div class="text-4xl mb-4">🤖</div>
+                                        <h3 class="heading-subsection mb-2">AI Conversations</h3>
+                                        <p class="text-body text-sm">Dynamic dialogues that adapt to your management style and decisions</p>
+                                    </div>
+                                    <div class="text-center p-6 bg-gradient-to-br from-sage-whisper/10 to-moss-gentle/10 rounded-2xl border border-sage-whisper/20">
+                                        <div class="text-4xl mb-4">📈</div>
+                                        <h3 class="heading-subsection mb-2">Personal Growth</h3>
+                                        <p class="text-body text-sm">Get insights, tips, and a clear path to your management goals</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <button onclick="window.app.nextTutorialStep()" class="btn-organic btn-primary px-8 py-3">
+                                        Next: See It In Action →
+                                    </button>
                                 </div>
                             </div>
-                            <button onclick="window.app.nextTutorialStep()" class="btn-organic btn-primary mt-6">
-                                Next: See How It Works
-                            </button>
                         </div>
 
+                        <!-- Tutorial Step 2: Interactive Demo -->
                         <div id="tutorialStep2" class="tutorial-step hidden">
-                            <div class="flex items-center mb-6">
-                                <div class="w-12 h-12 bg-hipo-coral rounded-full flex items-center justify-center text-white font-montserrat font-bold text-xl mr-4">2</div>
-                                <h3 class="font-montserrat text-xl font-semibold">Practice Conversations</h3>
-                            </div>
-                            <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 mb-6">
-                                <div class="space-y-4">
-                                    <div class="bg-white dark:bg-gray-600 p-4 rounded-lg">
-                                        <div class="text-sm font-medium mb-1">Team Member</div>
-                                        <div class="font-karla">"I've been struggling with the new project deadlines..."</div>
-                                    </div>
-                                    <div class="bg-hipo-blue text-white p-4 rounded-lg ml-8">
-                                        <div class="text-sm font-medium mb-1">You</div>
-                                        <div class="font-karla">"I appreciate you bringing this to my attention. Let's discuss what support you need."</div>
+                            <div class="card-organic mb-8">
+                                <div class="flex items-center mb-6">
+                                    <div class="w-16 h-16 bg-gradient-to-br from-sunset-warm to-terracotta-earth rounded-full flex items-center justify-center text-white font-bold text-2xl mr-6 shadow-lg">2</div>
+                                    <div>
+                                        <h2 class="heading-section">Experience a Conversation</h2>
+                                        <p class="text-body opacity-80">Here's how you'll practice real management situations</p>
                                     </div>
                                 </div>
+                                
+                                <div class="bg-gradient-to-br from-stone-50 to-sage-whisper/5 rounded-2xl p-8 mb-8 border border-stone-200">
+                                    <div class="mb-4">
+                                        <div class="text-sm font-medium text-stone-600 mb-2">📋 Scenario: Team Member Struggling with Deadlines</div>
+                                    </div>
+                                    
+                                    <div class="space-y-4">
+                                        <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-stone-300">
+                                            <div class="text-sm font-medium text-stone-600 mb-1">Team Member (Sarah)</div>
+                                            <div class="text-body">"Hi, I wanted to talk to you about the project deadline. I'm really struggling to keep up with everything and I'm worried I might not deliver on time..."</div>
+                                        </div>
+                                        
+                                        <div class="flex gap-3">
+                                            <div class="bg-gradient-to-r from-moss-gentle to-sage-whisper text-white p-4 rounded-xl shadow-sm flex-1">
+                                                <div class="text-sm font-medium mb-1">Your Response Option A</div>
+                                                <div class="text-sm opacity-90">"I appreciate you bringing this to my attention. Let's discuss what specific support you need to meet the deadline."</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="bg-green-50 p-4 rounded-xl border border-green-200">
+                                            <div class="text-sm font-medium text-green-800 mb-1">✨ AI Feedback</div>
+                                            <div class="text-sm text-green-700">Great empathetic response! You acknowledged the concern and offered support. This builds trust and opens dialogue.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <button onclick="window.app.nextTutorialStep()" class="btn-organic btn-primary px-8 py-3">
+                                        Next: Your Personalized Journey →
+                                    </button>
+                                </div>
                             </div>
-                            <button onclick="window.app.nextTutorialStep()" class="btn-organic btn-primary">
-                                Next: Get Feedback
-                            </button>
                         </div>
 
+                        <!-- Tutorial Step 3: Personalization Preview -->
                         <div id="tutorialStep3" class="tutorial-step hidden">
-                            <div class="flex items-center mb-6">
-                                <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-montserrat font-bold text-xl mr-4">3</div>
-                                <h3 class="font-montserrat text-xl font-semibold">Learn & Improve</h3>
+                            <div class="card-organic mb-8">
+                                <div class="flex items-center mb-6">
+                                    <div class="w-16 h-16 bg-gradient-to-br from-sage-whisper to-moss-gentle rounded-full flex items-center justify-center text-white font-bold text-2xl mr-6 shadow-lg">3</div>
+                                    <div>
+                                        <h2 class="heading-section">Your Personalized Experience</h2>
+                                        <p class="text-body opacity-80">Everything adapts to your unique goals and experience</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                                    <div class="space-y-4">
+                                        <h3 class="heading-subsection text-moss-gentle">🎯 What You'll Get</h3>
+                                        <div class="space-y-3">
+                                            <div class="flex items-start gap-3">
+                                                <div class="w-6 h-6 bg-moss-gentle rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                    <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <div class="font-medium text-soil-rich">Skill Assessment & Gap Analysis</div>
+                                                    <div class="text-sm text-stone-soft">Understand exactly where you are and where you need to go</div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-start gap-3">
+                                                <div class="w-6 h-6 bg-moss-gentle rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                    <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <div class="font-medium text-soil-rich">Visual Skill Tree</div>
+                                                    <div class="text-sm text-stone-soft">See your progress and unlock new capabilities as you grow</div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-start gap-3">
+                                                <div class="w-6 h-6 bg-moss-gentle rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                    <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <div class="font-medium text-soil-rich">Customized Scenarios</div>
+                                                    <div class="text-sm text-stone-soft">Practice situations relevant to your industry and role</div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-start gap-3">
+                                                <div class="w-6 h-6 bg-moss-gentle rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                    <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <div class="font-medium text-soil-rich">Real-World Action Tips</div>
+                                                    <div class="text-sm text-stone-soft">Apply your learning immediately in your actual work</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="bg-gradient-to-br from-moss-gentle/10 to-sage-whisper/10 rounded-2xl p-6 border border-moss-gentle/20">
+                                        <h3 class="heading-subsection text-center mb-4">Sample Progress Tracking</h3>
+                                        <div class="space-y-4">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-sm font-medium">Communication Skills</span>
+                                                <span class="text-sm text-moss-gentle font-bold">Level 3</span>
+                                            </div>
+                                            <div class="w-full bg-stone-200 rounded-full h-2">
+                                                <div class="bg-gradient-to-r from-moss-gentle to-sage-whisper h-2 rounded-full" style="width: 75%"></div>
+                                            </div>
+                                            
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-sm font-medium">Conflict Resolution</span>
+                                                <span class="text-sm text-sunset-warm font-bold">Level 2</span>
+                                            </div>
+                                            <div class="w-full bg-stone-200 rounded-full h-2">
+                                                <div class="bg-gradient-to-r from-sunset-warm to-terracotta-earth h-2 rounded-full" style="width: 45%"></div>
+                                            </div>
+                                            
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-sm font-medium">Team Building</span>
+                                                <span class="text-sm text-stone-400 font-bold">Level 1</span>
+                                            </div>
+                                            <div class="w-full bg-stone-200 rounded-full h-2">
+                                                <div class="bg-gradient-to-r from-stone-400 to-stone-500 h-2 rounded-full" style="width: 20%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <button onclick="window.app.startProfileCapture()" class="btn-organic btn-primary px-8 py-4 text-lg">
+                                        🚀 Start My Personalized Journey
+                                    </button>
+                                </div>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                                <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-                                    <div class="text-2xl font-bold text-hipo-blue font-montserrat">+50 XP</div>
-                                    <div class="text-sm font-karla text-gray-600 dark:text-gray-400">Points Earned</div>
-                                </div>
-                                <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-                                    <div class="text-2xl font-bold text-hipo-coral font-montserrat">85%</div>
-                                    <div class="text-sm font-karla text-gray-600 dark:text-gray-400">Performance</div>
-                                </div>
-                                <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-                                    <div class="text-2xl font-bold text-green-500 font-montserrat">A+</div>
-                                    <div class="text-sm font-karla text-gray-600 dark:text-gray-400">Feedback Grade</div>
-                                </div>
-                            </div>
-                            <button onclick="window.app.finishTutorial()" class="btn-organic btn-primary">
-                                Start My Assessment
-                            </button>
                         </div>
                     </div>
                 </div>
             </div>
         `;
+        
+        // Show tutorial step based on current step
+        this.updateTutorialStep();
     }
 
     showDashboard() {
@@ -1003,18 +1138,1369 @@ class CapabilityGym {
         `;
     }
     
-    // Add missing tutorial navigation functions
+    // Show skill tree visualization
+    showSkillTree() {
+        const mainContent = document.getElementById('mainContent');
+        const skillTree = this.generateSkillTree();
+        const userProgress = this.calculateUserProgress();
+        
+        mainContent.innerHTML = `
+            <div id="skillTreeScreen" class="screen" style="padding-top: 80px;">
+                <div class="container-organic">
+                    <!-- Header Section -->
+                    <div class="text-center mb-8">
+                        <h1 class="heading-display mb-4">Your Learning Journey 🌳</h1>
+                        <p class="text-handwritten text-xl mb-6">Navigate your personalized skill development path</p>
+                        
+                        <!-- Progress Overview -->
+                        <div class="bg-gradient-to-r from-moss-gentle to-sage-whisper rounded-2xl p-6 mb-8">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-white">
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold font-montserrat">${this.state.user.level}</div>
+                                    <div class="text-sm font-karla opacity-90">Current Level</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold font-montserrat">${this.state.user.xp}</div>
+                                    <div class="text-sm font-karla opacity-90">Experience Points</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold font-montserrat">${userProgress.completionPercentage}%</div>
+                                    <div class="text-sm font-karla opacity-90">Journey Complete</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Skill Tree Levels -->
+                    <div class="skill-tree-container">
+                        ${skillTree.levels.map((level, levelIndex) => `
+                            <div class="skill-level mb-12">
+                                <div class="text-center mb-8">
+                                    <h2 class="heading-section text-2xl mb-2">${level.name}</h2>
+                                    <p class="text-body text-stone-soft">${level.description}</p>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    ${level.modules.map((module, moduleIndex) => {
+                                        const isUnlocked = this.isModuleUnlocked(module, levelIndex, moduleIndex);
+                                        const isCompleted = this.isModuleCompleted(module.id);
+                                        const progress = this.getModuleProgress(module.id);
+                                        
+                                        return `
+                                            <div class="skill-module card-organic ${
+                                                isCompleted ? 'completed' : isUnlocked ? 'unlocked' : 'locked'
+                                            }" onclick="${isUnlocked ? `window.app.startModule('${module.id}')` : ''}">
+                                                <div class="module-icon text-4xl mb-4">${module.icon}</div>
+                                                <h3 class="heading-section mb-2">${module.title}</h3>
+                                                <p class="text-body text-sm mb-4">${module.description}</p>
+                                                
+                                                <div class="module-stats text-xs text-stone-soft mb-4">
+                                                    <div class="flex justify-between items-center">
+                                                        <span>⏱️ ${module.duration}</span>
+                                                        <span>🎯 ${module.scenarios} scenarios</span>
+                                                    </div>
+                                                    <div class="flex justify-between items-center mt-1">
+                                                        <span>⭐ ${module.xpReward} XP</span>
+                                                        <span class="module-status">
+                                                            ${isCompleted ? '✅ Complete' : isUnlocked ? '🔓 Available' : '🔒 Locked'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                
+                                                ${progress > 0 && !isCompleted ? `
+                                                    <div class="progress-bar bg-stone-soft bg-opacity-20 rounded-full h-2 mb-2">
+                                                        <div class="progress-fill bg-moss-gentle h-full rounded-full" style="width: ${progress}%"></div>
+                                                    </div>
+                                                    <div class="text-xs text-stone-soft text-center">${progress}% complete</div>
+                                                ` : ''}
+                                                
+                                                ${module.prerequisites.length > 0 && !isUnlocked ? `
+                                                    <div class="prerequisites mt-2">
+                                                        <div class="text-xs text-stone-soft">Requires:</div>
+                                                        <div class="text-xs text-stone-soft opacity-75">
+                                                            ${module.prerequisites.map(prereq => 
+                                                                this.findModuleById(skillTree, prereq)?.title || prereq
+                                                            ).join(', ')}
+                                                        </div>
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="text-center mt-12">
+                        <button onclick="window.app.showDashboard()" class="btn-organic btn-secondary mr-4">
+                            📊 Dashboard
+                        </button>
+                        <button onclick="window.app.showScenarioLibrary()" class="btn-organic btn-primary">
+                            🎯 Practice Scenarios
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Tutorial step management
+    updateTutorialStep() {
+        // Hide all tutorial steps
+        const steps = document.querySelectorAll('.tutorial-step');
+        steps.forEach(step => step.classList.add('hidden'));
+        
+        // Show current step
+        const currentStep = document.getElementById(`tutorialStep${this.state.tutorialStep}`);
+        if (currentStep) {
+            currentStep.classList.remove('hidden');
+        }
+    }
+    
     nextTutorialStep() {
         this.state.tutorialStep++;
         if (this.state.tutorialStep > 3) {
-            this.finishTutorial();
+            this.startProfileCapture();
         } else {
-            this.showTutorial();
+            this.updateTutorialStep();
         }
     }
     
     finishTutorial() {
-        this.showDashboard();
+        this.startProfileCapture();
+    }
+    
+    showModuleOverview(moduleId) {
+        const skillTree = this.generateSkillTree();
+        const module = this.findModuleById(skillTree, moduleId);
+        
+        if (!module) {
+            console.error('Module not found:', moduleId);
+            return;
+        }
+        
+        const mainContent = document.getElementById('mainContent');
+        mainContent.innerHTML = `
+            <div id="moduleOverviewScreen" class="screen" style="padding-top: 80px;">
+                <div class="container-organic">
+                    <div class="max-w-4xl mx-auto">
+                        <div class="text-center mb-12">
+                            <div class="text-6xl mb-4">${module.icon}</div>
+                            <h1 class="heading-display mb-4">${module.title}</h1>
+                            <p class="text-handwritten text-xl mb-6">${module.shortDescription}</p>
+                            
+                            <div class="flex items-center justify-center gap-6 text-sm text-stone-500 mb-8">
+                                <span>⏱️ Duration: ${module.duration}</span>
+                                <span>•</span>
+                                <span>🎯 ${module.scenarios} scenarios</span>
+                                <span>•</span>
+                                <span>✨ ${module.xpReward} XP reward</span>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                            <div class="card-organic">
+                                <h2 class="heading-section mb-4">🎯 What You'll Learn</h2>
+                                <div class="space-y-3">
+                                    ${this.getModuleLearningObjectives(moduleId).map(objective => `
+                                        <div class="flex items-start gap-3">
+                                            <div class="w-5 h-5 bg-moss-gentle rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                                </svg>
+                                            </div>
+                                            <span class="text-body">${objective}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            
+                            <div class="card-organic">
+                                <h2 class="heading-section mb-4">📝 Real-World Applications</h2>
+                                <div class="space-y-3">
+                                    ${this.getModuleApplications(moduleId).map(application => `
+                                        <div class="flex items-start gap-3">
+                                            <div class="text-lg flex-shrink-0">${application.icon}</div>
+                                            <div>
+                                                <div class="font-medium text-soil-rich">${application.title}</div>
+                                                <div class="text-sm text-stone-soft">${application.description}</div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center">
+                            <button onclick="window.app.startModuleScenarios('${moduleId}')" class="btn-organic btn-primary px-8 py-4 text-lg mr-4">
+                                🎆 Start Training
+                            </button>
+                            <button onclick="window.app.showSkillTree()" class="btn-organic btn-secondary px-6 py-4">
+                                ← Back to Skill Tree
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    findModuleById(skillTree, moduleId) {
+        for (const level of skillTree.levels) {
+            for (const module of level.modules) {
+                if (module.id === moduleId) {
+                    return module;
+                }
+            }
+        }
+        return null;
+    }
+    
+    getModuleLearningObjectives(moduleId) {
+        const objectives = {
+            'communication-basics': [
+                'Master active listening techniques',
+                'Structure clear and concise messages',
+                'Adapt communication style to different audiences',
+                'Handle difficult conversations with confidence'
+            ],
+            'feedback-essentials': [
+                'Give constructive feedback using proven frameworks',
+                'Receive feedback gracefully and act on it',
+                'Create a culture of continuous improvement',
+                'Balance positive reinforcement with growth areas'
+            ],
+            'team-dynamics': [
+                'Understand team formation and development stages',
+                'Identify and leverage individual strengths',
+                'Foster psychological safety and trust',
+                'Facilitate effective team meetings and decisions'
+            ],
+            'conflict-resolution': [
+                'Identify early signs of team conflict',
+                'Mediate disputes fairly and effectively',
+                'Transform conflict into productive dialogue',
+                'Prevent future conflicts through better systems'
+            ],
+            'performance-management': [
+                'Set SMART goals and track progress',
+                'Conduct effective performance reviews',
+                'Create development plans for team members',
+                'Address performance issues constructively'
+            ],
+            'delegation-mastery': [
+                'Identify tasks suitable for delegation',
+                'Match tasks to team member capabilities',
+                'Provide clear instructions and expectations',
+                'Follow up effectively without micromanaging'
+            ]
+        };
+        
+        return objectives[moduleId] || ['Complete engaging scenarios', 'Practice real-world situations', 'Receive personalized feedback', 'Apply learnings immediately'];
+    }
+    
+    getModuleApplications(moduleId) {
+        const applications = {
+            'communication-basics': [
+                { icon: '💬', title: 'Team Meetings', description: 'Lead more effective and engaging team meetings' },
+                { icon: '📞', title: '1:1 Conversations', description: 'Have meaningful one-on-one discussions with team members' },
+                { icon: '📧', title: 'Written Communication', description: 'Write clearer emails and documentation' }
+            ],
+            'feedback-essentials': [
+                { icon: '🎯', title: 'Performance Reviews', description: 'Deliver constructive and motivating performance feedback' },
+                { icon: '📊', title: 'Project Debriefs', description: 'Facilitate learning-focused project retrospectives' },
+                { icon: '🌱', title: 'Career Development', description: 'Guide team members in their professional growth' }
+            ],
+            'team-dynamics': [
+                { icon: '👥', title: 'Team Building', description: 'Create stronger bonds and collaboration within your team' },
+                { icon: '🤝', title: 'Cross-functional Work', description: 'Improve collaboration with other departments' },
+                { icon: '🎢', title: 'Remote Teams', description: 'Build connection and engagement in distributed teams' }
+            ]
+        };
+        
+        return applications[moduleId] || [
+            { icon: '🎯', title: 'Daily Practice', description: 'Apply these skills in your everyday management tasks' },
+            { icon: '📈', title: 'Team Growth', description: 'Help your team develop and achieve better results' },
+            { icon: '🎆', title: 'Leadership Impact', description: 'Increase your effectiveness as a leader' }
+        ];
+    }
+    
+    startModuleScenarios(moduleId) {
+        // Initialize module progress tracking
+        if (!this.state.user.moduleProgress) {
+            this.state.user.moduleProgress = {};
+        }
+        
+        if (!this.state.user.moduleProgress[moduleId]) {
+            this.state.user.moduleProgress[moduleId] = {
+                currentScenario: 0,
+                completedScenarios: [],
+                percentage: 0,
+                startedAt: new Date().toISOString()
+            };
+        }
+        
+        this.state.currentModule = moduleId;
+        this.saveState();
+        
+        // Show the first scenario for this module
+        this.showModuleScenario(moduleId, 0);
+    }
+    
+    // Profile capture and skill assessment
+    startProfileCapture() {
+        this.state.onboardingStep = 1;
+        this.showProfileCapture();
+    }
+    
+    showProfileCapture() {
+        const mainContent = document.getElementById('mainContent');
+        
+        if (this.state.onboardingStep === 1) {
+            // Step 1: Basic Profile Information
+            mainContent.innerHTML = `
+                <div id="profileCaptureScreen" class="screen" style="padding-top: 80px;">
+                    <div class="container-organic">
+                        <div class="max-w-3xl mx-auto">
+                            <div class="text-center mb-12">
+                                <h1 class="heading-display mb-4">Let's Get to Know You 👋</h1>
+                                <p class="text-handwritten text-xl mb-2">Help us personalize your management training journey</p>
+                                <div class="flex items-center justify-center gap-2 mb-4">
+                                    <div class="w-3 h-3 bg-moss-gentle rounded-full"></div>
+                                    <div class="w-3 h-3 bg-stone-300 rounded-full"></div>
+                                    <div class="w-3 h-3 bg-stone-300 rounded-full"></div>
+                                    <div class="w-3 h-3 bg-stone-300 rounded-full"></div>
+                                </div>
+                                <p class="text-body opacity-60">Step 1 of 4: Your Background</p>
+                            </div>
+                            
+                            <div class="card-organic">
+                                <form id="profileForm1" class="space-y-8">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label class="block text-sm font-medium text-soil-rich mb-3">What's your current role? *</label>
+                                            <select name="currentRole" required class="w-full p-4 border border-stone-300 rounded-xl focus:ring-2 focus:ring-moss-gentle focus:border-transparent">
+                                                <option value="">Select your role...</option>
+                                                <option value="individual-contributor">Individual Contributor</option>
+                                                <option value="team-lead">Team Lead</option>
+                                                <option value="first-time-manager">First-Time Manager</option>
+                                                <option value="experienced-manager">Experienced Manager</option>
+                                                <option value="senior-manager">Senior Manager</option>
+                                                <option value="director">Director</option>
+                                                <option value="vp-executive">VP/Executive</option>
+                                                <option value="aspiring-manager">Aspiring Manager</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-medium text-soil-rich mb-3">Years of management experience? *</label>
+                                            <select name="experience" required class="w-full p-4 border border-stone-300 rounded-xl focus:ring-2 focus:ring-moss-gentle focus:border-transparent">
+                                                <option value="">Select experience...</option>
+                                                <option value="none">No management experience</option>
+                                                <option value="less-than-1">Less than 1 year</option>
+                                                <option value="1-2">1-2 years</option>
+                                                <option value="3-5">3-5 years</option>
+                                                <option value="6-10">6-10 years</option>
+                                                <option value="more-than-10">More than 10 years</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label class="block text-sm font-medium text-soil-rich mb-3">What industry are you in? *</label>
+                                            <select name="industry" required class="w-full p-4 border border-stone-300 rounded-xl focus:ring-2 focus:ring-moss-gentle focus:border-transparent">
+                                                <option value="">Select industry...</option>
+                                                <option value="technology">Technology</option>
+                                                <option value="finance">Finance & Banking</option>
+                                                <option value="healthcare">Healthcare</option>
+                                                <option value="consulting">Consulting</option>
+                                                <option value="retail">Retail & E-commerce</option>
+                                                <option value="manufacturing">Manufacturing</option>
+                                                <option value="education">Education</option>
+                                                <option value="nonprofit">Non-profit</option>
+                                                <option value="government">Government</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-medium text-soil-rich mb-3">Team size you manage/aspire to manage? *</label>
+                                            <select name="teamSize" required class="w-full p-4 border border-stone-300 rounded-xl focus:ring-2 focus:ring-moss-gentle focus:border-transparent">
+                                                <option value="">Select team size...</option>
+                                                <option value="none">No direct reports</option>
+                                                <option value="1-3">1-3 people</option>
+                                                <option value="4-7">4-7 people</option>
+                                                <option value="8-15">8-15 people</option>
+                                                <option value="16-30">16-30 people</option>
+                                                <option value="more-than-30">More than 30 people</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="text-center pt-6">
+                                        <button type="submit" class="btn-organic btn-primary px-8 py-4">
+                                            Next: Your Goals →
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add form submission handler
+            document.getElementById('profileForm1').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                this.state.user.currentRole = formData.get('currentRole');
+                this.state.user.experience = formData.get('experience');
+                this.state.user.industry = formData.get('industry');
+                this.state.user.teamSize = formData.get('teamSize');
+                this.saveState();
+                this.nextProfileStep();
+            });
+            
+        } else if (this.state.onboardingStep === 2) {
+            // Step 2: Goals and Aspirations
+            mainContent.innerHTML = `
+                <div id="profileCaptureScreen" class="screen" style="padding-top: 80px;">
+                    <div class="container-organic">
+                        <div class="max-w-3xl mx-auto">
+                            <div class="text-center mb-12">
+                                <h1 class="heading-display mb-4">What Are Your Goals? 🎯</h1>
+                                <p class="text-handwritten text-xl mb-2">Tell us what you want to achieve as a leader</p>
+                                <div class="flex items-center justify-center gap-2 mb-4">
+                                    <div class="w-3 h-3 bg-moss-gentle rounded-full"></div>
+                                    <div class="w-3 h-3 bg-moss-gentle rounded-full"></div>
+                                    <div class="w-3 h-3 bg-stone-300 rounded-full"></div>
+                                    <div class="w-3 h-3 bg-stone-300 rounded-full"></div>
+                                </div>
+                                <p class="text-body opacity-60">Step 2 of 4: Your Aspirations</p>
+                            </div>
+                            
+                            <div class="card-organic">
+                                <form id="profileForm2" class="space-y-8">
+                                    <div>
+                                        <label class="block text-sm font-medium text-soil-rich mb-4">What are your primary management goals? (Select all that apply) *</label>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <label class="flex items-start gap-3 p-4 border border-stone-200 rounded-xl hover:bg-moss-gentle/5 cursor-pointer">
+                                                <input type="checkbox" name="goals" value="become-manager" class="mt-1">
+                                                <div>
+                                                    <div class="font-medium text-soil-rich">Become a Manager</div>
+                                                    <div class="text-sm text-stone-soft">Transition from individual contributor to management</div>
+                                                </div>
+                                            </label>
+                                            <label class="flex items-start gap-3 p-4 border border-stone-200 rounded-xl hover:bg-moss-gentle/5 cursor-pointer">
+                                                <input type="checkbox" name="goals" value="improve-communication" class="mt-1">
+                                                <div>
+                                                    <div class="font-medium text-soil-rich">Improve Communication</div>
+                                                    <div class="text-sm text-stone-soft">Better team conversations and feedback</div>
+                                                </div>
+                                            </label>
+                                            <label class="flex items-start gap-3 p-4 border border-stone-200 rounded-xl hover:bg-moss-gentle/5 cursor-pointer">
+                                                <input type="checkbox" name="goals" value="conflict-resolution" class="mt-1">
+                                                <div>
+                                                    <div class="font-medium text-soil-rich">Handle Conflicts</div>
+                                                    <div class="text-sm text-stone-soft">Navigate team disputes and difficult conversations</div>
+                                                </div>
+                                            </label>
+                                            <label class="flex items-start gap-3 p-4 border border-stone-200 rounded-xl hover:bg-moss-gentle/5 cursor-pointer">
+                                                <input type="checkbox" name="goals" value="team-building" class="mt-1">
+                                                <div>
+                                                    <div class="font-medium text-soil-rich">Build Strong Teams</div>
+                                                    <div class="text-sm text-stone-soft">Create cohesive, high-performing teams</div>
+                                                </div>
+                                            </label>
+                                            <label class="flex items-start gap-3 p-4 border border-stone-200 rounded-xl hover:bg-moss-gentle/5 cursor-pointer">
+                                                <input type="checkbox" name="goals" value="performance-management" class="mt-1">
+                                                <div>
+                                                    <div class="font-medium text-soil-rich">Performance Management</div>
+                                                    <div class="text-sm text-stone-soft">Set goals, give feedback, manage performance</div>
+                                                </div>
+                                            </label>
+                                            <label class="flex items-start gap-3 p-4 border border-stone-200 rounded-xl hover:bg-moss-gentle/5 cursor-pointer">
+                                                <input type="checkbox" name="goals" value="strategic-thinking" class="mt-1">
+                                                <div>
+                                                    <div class="font-medium text-soil-rich">Strategic Leadership</div>
+                                                    <div class="text-sm text-stone-soft">Develop strategic thinking and vision</div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-soil-rich mb-3">What's your biggest management challenge right now?</label>
+                                        <textarea name="challenge" rows="4" placeholder="Describe your current biggest challenge or concern..." class="w-full p-4 border border-stone-300 rounded-xl focus:ring-2 focus:ring-moss-gentle focus:border-transparent"></textarea>
+                                    </div>
+                                    
+                                    <div class="text-center pt-6">
+                                        <button type="submit" class="btn-organic btn-primary px-8 py-4">
+                                            Next: Skill Assessment →
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add form submission handler
+            document.getElementById('profileForm2').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                this.state.user.goals = Array.from(formData.getAll('goals'));
+                this.state.user.challenge = formData.get('challenge');
+                this.saveState();
+                this.nextProfileStep();
+            });
+            
+        } else if (this.state.onboardingStep === 3) {
+            // Step 3: Skill Assessment
+            this.showSkillAssessment();
+        } else if (this.state.onboardingStep === 4) {
+            // Step 4: Personalized Recommendations
+            this.showPersonalizedRecommendations();
+        }
+    }
+    
+    nextProfileStep() {
+        this.state.onboardingStep++;
+        this.showProfileCapture();
+    }
+    
+    showSkillAssessment() {
+        const mainContent = document.getElementById('mainContent');
+        
+        mainContent.innerHTML = `
+            <div id="skillAssessmentScreen" class="screen" style="padding-top: 80px;">
+                <div class="container-organic">
+                    <div class="max-w-4xl mx-auto">
+                        <div class="text-center mb-12">
+                            <h1 class="heading-display mb-4">Quick Skill Assessment 🎨</h1>
+                            <p class="text-handwritten text-xl mb-2">Help us understand your current capabilities</p>
+                            <div class="flex items-center justify-center gap-2 mb-4">
+                                <div class="w-3 h-3 bg-moss-gentle rounded-full"></div>
+                                <div class="w-3 h-3 bg-moss-gentle rounded-full"></div>
+                                <div class="w-3 h-3 bg-moss-gentle rounded-full"></div>
+                                <div class="w-3 h-3 bg-stone-300 rounded-full"></div>
+                            </div>
+                            <p class="text-body opacity-60">Step 3 of 4: Rate your current confidence level</p>
+                        </div>
+                        
+                        <div class="card-organic">
+                            <form id="skillAssessmentForm" class="space-y-8">
+                                <div class="mb-6">
+                                    <p class="text-body mb-6">Rate your confidence in each area from 1 (beginner) to 5 (expert):</p>
+                                </div>
+                                
+                                <div class="space-y-6">
+                                    ${this.getSkillAssessmentQuestions().map(skill => `
+                                        <div class="border border-stone-200 rounded-xl p-6">
+                                            <div class="flex justify-between items-start mb-4">
+                                                <div class="flex-1">
+                                                    <h3 class="font-semibold text-soil-rich mb-2">${skill.name}</h3>
+                                                    <p class="text-sm text-stone-soft">${skill.description}</p>
+                                                </div>
+                                                <div class="text-2xl ml-4">${skill.icon}</div>
+                                            </div>
+                                            
+                                            <div class="flex items-center gap-4">
+                                                <span class="text-sm text-stone-soft">Beginner</span>
+                                                <div class="flex gap-2">
+                                                    ${[1,2,3,4,5].map(level => `
+                                                        <label class="cursor-pointer">
+                                                            <input type="radio" name="${skill.id}" value="${level}" class="sr-only" required>
+                                                            <div class="w-10 h-10 rounded-full border-2 border-stone-300 flex items-center justify-center hover:border-moss-gentle transition-colors skill-rating" data-level="${level}">
+                                                                <span class="text-sm font-medium text-stone-400">${level}</span>
+                                                            </div>
+                                                        </label>
+                                                    `).join('')}
+                                                </div>
+                                                <span class="text-sm text-stone-soft">Expert</span>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                
+                                <div class="text-center pt-6">
+                                    <button type="submit" class="btn-organic btn-primary px-8 py-4">
+                                        Get My Personalized Plan →
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add interactive rating functionality
+        document.querySelectorAll('.skill-rating').forEach(rating => {
+            rating.addEventListener('click', (e) => {
+                const level = parseInt(e.currentTarget.dataset.level);
+                const skillId = e.currentTarget.closest('.border').querySelector('input[type="radio"]').name;
+                
+                // Update visual state
+                const allRatings = e.currentTarget.closest('.flex').querySelectorAll('.skill-rating');
+                allRatings.forEach((r, index) => {
+                    const ratingLevel = index + 1;
+                    if (ratingLevel <= level) {
+                        r.classList.add('bg-moss-gentle', 'border-moss-gentle', 'text-white');
+                        r.classList.remove('border-stone-300', 'text-stone-400');
+                        r.querySelector('span').classList.add('text-white');
+                        r.querySelector('span').classList.remove('text-stone-400');
+                    } else {
+                        r.classList.remove('bg-moss-gentle', 'border-moss-gentle', 'text-white');
+                        r.classList.add('border-stone-300', 'text-stone-400');
+                        r.querySelector('span').classList.remove('text-white');
+                        r.querySelector('span').classList.add('text-stone-400');
+                    }
+                });
+                
+                // Set the radio button value
+                e.currentTarget.closest('.border').querySelector(`input[value="${level}"]`).checked = true;
+            });
+        });
+        
+        // Add form submission handler
+        document.getElementById('skillAssessmentForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const skillRatings = {};
+            
+            this.getSkillAssessmentQuestions().forEach(skill => {
+                skillRatings[skill.id] = parseInt(formData.get(skill.id));
+            });
+            
+            this.state.user.skillRatings = skillRatings;
+            this.saveState();
+            this.nextProfileStep();
+        });
+    }
+    
+    getSkillAssessmentQuestions() {
+        return [
+            {
+                id: 'communication',
+                name: 'Communication & Feedback',
+                description: 'Having clear conversations, giving constructive feedback, active listening',
+                icon: '💬'
+            },
+            {
+                id: 'conflict-resolution',
+                name: 'Conflict Resolution',
+                description: 'Managing disagreements, mediating disputes, difficult conversations',
+                icon: '🤝'
+            },
+            {
+                id: 'team-building',
+                name: 'Team Building & Collaboration',
+                description: 'Creating team cohesion, fostering collaboration, building trust',
+                icon: '👥'
+            },
+            {
+                id: 'performance-management',
+                name: 'Performance Management',
+                description: 'Setting goals, tracking progress, performance reviews, coaching',
+                icon: '🎢'
+            },
+            {
+                id: 'delegation',
+                name: 'Delegation & Empowerment',
+                description: 'Assigning tasks effectively, empowering team members, follow-up',
+                icon: '🎆'
+            },
+            {
+                id: 'strategic-thinking',
+                name: 'Strategic Thinking',
+                description: 'Long-term planning, vision setting, decision making, prioritization',
+                icon: '🧠'
+            },
+            {
+                id: 'emotional-intelligence',
+                name: 'Emotional Intelligence',
+                description: 'Self-awareness, empathy, managing emotions, reading team dynamics',
+                icon: '❤️'
+            },
+            {
+                id: 'change-management',
+                name: 'Change Management',
+                description: 'Leading through change, adapting to new situations, resilience',
+                icon: '🔄'
+            }
+        ];
+    }
+    
+    showPersonalizedRecommendations() {
+        const mainContent = document.getElementById('mainContent');
+        const diagnosis = this.generateSkillDiagnosis();
+        const recommendedPath = this.getRecommendedLearningPath();
+        
+        mainContent.innerHTML = `
+            <div id="recommendationsScreen" class="screen" style="padding-top: 80px;">
+                <div class="container-organic">
+                    <div class="max-w-5xl mx-auto">
+                        <div class="text-center mb-12">
+                            <h1 class="heading-display mb-4">Your Personalized Journey 🎆</h1>
+                            <p class="text-handwritten text-xl mb-2">Based on your profile, here's your custom learning path</p>
+                            <div class="flex items-center justify-center gap-2 mb-4">
+                                <div class="w-3 h-3 bg-moss-gentle rounded-full"></div>
+                                <div class="w-3 h-3 bg-moss-gentle rounded-full"></div>
+                                <div class="w-3 h-3 bg-moss-gentle rounded-full"></div>
+                                <div class="w-3 h-3 bg-moss-gentle rounded-full"></div>
+                            </div>
+                            <p class="text-body opacity-60">Step 4 of 4: Your Custom Plan</p>
+                        </div>
+                        
+                        <!-- Skill Diagnosis -->
+                        <div class="card-organic mb-8">
+                            <h2 class="heading-section mb-6">🎯 Your Skill Profile</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h3 class="heading-subsection text-moss-gentle mb-4">✨ Your Strengths</h3>
+                                    <div class="space-y-3">
+                                        ${diagnosis.strengths.map(strength => `
+                                            <div class="flex items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-200">
+                                                <div class="w-8 h-8 bg-green-400 rounded-full flex items-center justify-center">
+                                                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <div class="font-medium text-green-800">${strength.name}</div>
+                                                    <div class="text-sm text-green-700">Level ${strength.level}/5</div>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <h3 class="heading-subsection text-sunset-warm mb-4">🎯 Growth Opportunities</h3>
+                                    <div class="space-y-3">
+                                        ${diagnosis.growthAreas.map(area => `
+                                            <div class="flex items-center gap-3 p-3 bg-orange-50 rounded-xl border border-orange-200">
+                                                <div class="w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center">
+                                                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <div class="font-medium text-orange-800">${area.name}</div>
+                                                    <div class="text-sm text-orange-700">Level ${area.level}/5 - High Impact</div>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Recommended Learning Path -->
+                        <div class="card-organic mb-8">
+                            <h2 class="heading-section mb-6">🗺️ Your Learning Path</h2>
+                            <p class="text-body mb-6">Based on your ${this.state.user.currentRole} role and goals, here's your personalized journey:</p>
+                            
+                            <div class="space-y-4">
+                                ${recommendedPath.modules.map((module, index) => `
+                                    <div class="flex items-start gap-4 p-6 border border-stone-200 rounded-xl hover:shadow-md transition-shadow">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-moss-gentle to-sage-whisper rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+                                            ${index + 1}
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="flex items-start justify-between mb-2">
+                                                <h3 class="heading-subsection">${module.title}</h3>
+                                                <div class="flex items-center gap-2 text-sm text-stone-500">
+                                                    <span>⏱️ ${module.duration}</span>
+                                                    <span>•</span>
+                                                    <span>🎢 ${module.scenarios} scenarios</span>
+                                                </div>
+                                            </div>
+                                            <p class="text-body text-sm mb-3">${module.description}</p>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs bg-moss-gentle/10 text-moss-gentle px-2 py-1 rounded-full">${module.priority}</span>
+                                                <span class="text-xs bg-stone-100 text-stone-600 px-2 py-1 rounded-full">${module.difficulty}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <!-- Action Items -->
+                        <div class="card-organic mb-8">
+                            <h2 class="heading-section mb-6">📝 Real-World Action Items</h2>
+                            <p class="text-body mb-6">Start applying these insights in your current role:</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                ${diagnosis.actionItems.map(item => `
+                                    <div class="p-4 bg-gradient-to-br from-sage-whisper/10 to-moss-gentle/10 rounded-xl border border-sage-whisper/20">
+                                        <div class="flex items-start gap-3">
+                                            <div class="text-lg">${item.icon}</div>
+                                            <div>
+                                                <h4 class="font-medium text-soil-rich mb-1">${item.title}</h4>
+                                                <p class="text-sm text-stone-soft">${item.description}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <div class="text-center">
+                            <button onclick="window.app.completeOnboarding()" class="btn-organic btn-primary px-8 py-4 text-lg">
+                                🎆 Start My Training Journey
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    generateSkillDiagnosis() {
+        const skillRatings = this.state.user.skillRatings || {};
+        const skillQuestions = this.getSkillAssessmentQuestions();
+        
+        const strengths = [];
+        const growthAreas = [];
+        const actionItems = [];
+        
+        // Analyze skill ratings
+        skillQuestions.forEach(skill => {
+            const rating = skillRatings[skill.id] || 1;
+            if (rating >= 4) {
+                strengths.push({ name: skill.name, level: rating, id: skill.id });
+            } else if (rating <= 2) {
+                growthAreas.push({ name: skill.name, level: rating, id: skill.id });
+            }
+        });
+        
+        // Generate personalized action items based on goals and weak areas
+        const goals = this.state.user.goals || [];
+        
+        if (goals.includes('improve-communication') || skillRatings.communication <= 2) {
+            actionItems.push({
+                icon: '💬',
+                title: 'Schedule Weekly 1:1s',
+                description: 'Start having regular one-on-one meetings with your team members to practice active listening and feedback.'
+            });
+        }
+        
+        if (goals.includes('conflict-resolution') || skillRatings['conflict-resolution'] <= 2) {
+            actionItems.push({
+                icon: '🤝',
+                title: 'Practice the DESC Method',
+                description: 'Use Describe, Express, Specify, Consequences framework for difficult conversations this week.'
+            });
+        }
+        
+        if (goals.includes('team-building') || skillRatings['team-building'] <= 2) {
+            actionItems.push({
+                icon: '👥',
+                title: 'Organize Team Building',
+                description: 'Plan a team activity or retrospective to strengthen relationships and collaboration.'
+            });
+        }
+        
+        if (goals.includes('performance-management') || skillRatings['performance-management'] <= 2) {
+            actionItems.push({
+                icon: '🎢',
+                title: 'Set SMART Goals',
+                description: 'Work with each team member to establish specific, measurable goals for the next quarter.'
+            });
+        }
+        
+        return { strengths, growthAreas, actionItems };
+    }
+    
+    getRecommendedLearningPath() {
+        const role = this.state.user.currentRole;
+        const experience = this.state.user.experience;
+        const goals = this.state.user.goals || [];
+        const skillRatings = this.state.user.skillRatings || {};
+        
+        let modules = [];
+        
+        // Customize modules based on role and experience
+        if (role === 'aspiring-manager' || role === 'individual-contributor') {
+            modules = [
+                {
+                    title: 'Foundations of Management',
+                    description: 'Learn the core principles of effective leadership and management fundamentals.',
+                    duration: '2-3 weeks',
+                    scenarios: 8,
+                    priority: 'Essential',
+                    difficulty: 'Beginner'
+                },
+                {
+                    title: 'Communication Mastery',
+                    description: 'Master the art of clear communication, active listening, and giving feedback.',
+                    duration: '3-4 weeks',
+                    scenarios: 12,
+                    priority: 'High Priority',
+                    difficulty: 'Intermediate'
+                },
+                {
+                    title: 'Building Your First Team',
+                    description: 'Learn how to recruit, onboard, and build a cohesive high-performing team.',
+                    duration: '4-5 weeks',
+                    scenarios: 15,
+                    priority: 'Medium Priority',
+                    difficulty: 'Intermediate'
+                }
+            ];
+        } else if (role === 'first-time-manager' || experience === 'less-than-1') {
+            modules = [
+                {
+                    title: 'New Manager Bootcamp',
+                    description: 'Essential skills for your first 90 days as a manager, including team dynamics.',
+                    duration: '3-4 weeks',
+                    scenarios: 15,
+                    priority: 'Essential',
+                    difficulty: 'Beginner'
+                },
+                {
+                    title: 'Difficult Conversations',
+                    description: 'Navigate challenging discussions with confidence and empathy.',
+                    duration: '2-3 weeks',
+                    scenarios: 10,
+                    priority: 'High Priority',
+                    difficulty: 'Intermediate'
+                },
+                {
+                    title: 'Performance Management Basics',
+                    description: 'Set goals, track progress, and conduct effective performance reviews.',
+                    duration: '3-4 weeks',
+                    scenarios: 12,
+                    priority: 'High Priority',
+                    difficulty: 'Intermediate'
+                }
+            ];
+        } else {
+            modules = [
+                {
+                    title: 'Advanced Leadership Skills',
+                    description: 'Develop strategic thinking, vision setting, and advanced team management.',
+                    duration: '4-5 weeks',
+                    scenarios: 18,
+                    priority: 'Essential',
+                    difficulty: 'Advanced'
+                },
+                {
+                    title: 'Managing Managers',
+                    description: 'Learn to lead through others and build scalable management systems.',
+                    duration: '5-6 weeks',
+                    scenarios: 20,
+                    priority: 'High Priority',
+                    difficulty: 'Advanced'
+                },
+                {
+                    title: 'Organizational Change',
+                    description: 'Lead transformation initiatives and guide teams through change.',
+                    duration: '4-5 weeks',
+                    scenarios: 16,
+                    priority: 'Medium Priority',
+                    difficulty: 'Advanced'
+                }
+            ];
+        }
+        
+        return { modules };
+    }
+    
+    completeOnboarding() {
+        // Mark onboarding as complete
+        this.state.onboardingComplete = true;
+        
+        // Set initial level based on experience and assessment
+        this.determineInitialLevel();
+        
+        // Generate initial XP based on assessment
+        this.generateInitialXP();
+        
+        this.saveState();
+        this.showSkillTree();
+    }
+    
+    determineInitialLevel() {
+        const experience = this.state.user.experience;
+        const skillRatings = this.state.user.skillRatings || {};
+        const averageSkill = Object.values(skillRatings).reduce((a, b) => a + b, 0) / Object.keys(skillRatings).length;
+        
+        if (experience === 'none' || averageSkill < 2) {
+            this.state.user.level = 'Aspiring Leader';
+        } else if (experience === 'less-than-1' || averageSkill < 3) {
+            this.state.user.level = 'Emerging Manager';
+        } else if (experience === '1-2' || averageSkill < 4) {
+            this.state.user.level = 'Developing Leader';
+        } else {
+            this.state.user.level = 'Experienced Manager';
+        }
+    }
+    
+    generateInitialXP() {
+        const skillRatings = this.state.user.skillRatings || {};
+        const totalSkillPoints = Object.values(skillRatings).reduce((a, b) => a + b, 0);
+        this.state.user.xp = totalSkillPoints * 10; // 10 XP per skill point
+    }
+    
+    showSkillTree() {
+        const mainContent = document.getElementById('mainContent');
+        const skillTree = this.generateSkillTree();
+        const userProgress = this.calculateUserProgress();
+        
+        mainContent.innerHTML = `
+            <div id="skillTreeScreen" class="screen" style="padding-top: 80px;">
+                <div class="container-organic">
+                    <div class="text-center mb-12">
+                        <h1 class="heading-display mb-4">Your Leadership Journey 🌳</h1>
+                        <p class="text-handwritten text-xl mb-6">Navigate your personalized skill development path</p>
+                        
+                        <!-- User Progress Summary -->
+                        <div class="max-w-2xl mx-auto mb-8">
+                            <div class="card-organic">
+                                <div class="grid grid-cols-3 gap-6 text-center">
+                                    <div>
+                                        <div class="text-3xl font-bold text-moss-gentle">${this.state.user.level}</div>
+                                        <div class="text-sm text-stone-soft">Current Level</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-3xl font-bold text-sunset-warm">${this.state.user.xp}</div>
+                                        <div class="text-sm text-stone-soft">Total XP</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-3xl font-bold text-sage-whisper">${userProgress.completedModules}/${userProgress.totalModules}</div>
+                                        <div class="text-sm text-stone-soft">Modules Complete</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Skill Tree Visualization -->
+                    <div class="max-w-6xl mx-auto">
+                        <div class="relative">
+                            <!-- Connection Lines (SVG overlay) -->
+                            <svg class="absolute inset-0 w-full h-full pointer-events-none" style="z-index: 1;">
+                                ${this.generateSkillTreeConnections(skillTree)}
+                            </svg>
+                            
+                            <!-- Skill Nodes -->
+                            <div class="relative" style="z-index: 2;">
+                                ${skillTree.levels.map((level, levelIndex) => `
+                                    <div class="mb-16">
+                                        <div class="text-center mb-8">
+                                            <h2 class="heading-section text-moss-gentle">${level.title}</h2>
+                                            <p class="text-body opacity-80">${level.description}</p>
+                                        </div>
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-${Math.min(level.modules.length, 3)} gap-8 justify-items-center">
+                                            ${level.modules.map((module, moduleIndex) => {
+                                                const isUnlocked = this.isModuleUnlocked(module, levelIndex, moduleIndex);
+                                                const isCompleted = this.isModuleCompleted(module.id);
+                                                const progress = this.getModuleProgress(module.id);
+                                                
+                                                return `
+                                                    <div class="skill-node relative ${isUnlocked ? 'unlocked' : 'locked'} ${isCompleted ? 'completed' : ''}" 
+                                                         onclick="${isUnlocked ? `window.app.startModule('${module.id}')` : ''}">
+                                                        <div class="w-48 h-48 rounded-2xl border-4 transition-all duration-300 cursor-pointer relative overflow-hidden
+                                                                ${isCompleted ? 'border-green-400 bg-gradient-to-br from-green-50 to-emerald-100' : 
+                                                                  isUnlocked ? 'border-moss-gentle bg-gradient-to-br from-moss-gentle/10 to-sage-whisper/20 hover:shadow-lg hover:scale-105' : 
+                                                                  'border-stone-300 bg-stone-100 opacity-60'}">
+                                                            
+                                                            <!-- Progress Ring -->
+                                                            ${progress > 0 ? `
+                                                                <div class="absolute inset-2 rounded-xl border-2 border-moss-gentle/30">
+                                                                    <div class="w-full h-2 bg-stone-200 rounded-full absolute bottom-4 left-4 right-4">
+                                                                        <div class="h-full bg-gradient-to-r from-moss-gentle to-sage-whisper rounded-full transition-all duration-500" style="width: ${progress}%"></div>
+                                                                    </div>
+                                                                </div>
+                                                            ` : ''}
+                                                            
+                                                            <!-- Module Content -->
+                                                            <div class="p-6 h-full flex flex-col justify-center text-center">
+                                                                <div class="text-4xl mb-3">${module.icon}</div>
+                                                                <h3 class="font-semibold text-soil-rich mb-2">${module.title}</h3>
+                                                                <p class="text-sm text-stone-soft mb-3">${module.shortDescription}</p>
+                                                                
+                                                                <div class="flex items-center justify-center gap-2 text-xs text-stone-400">
+                                                                    <span>⏱️ ${module.duration}</span>
+                                                                    <span>•</span>
+                                                                    <span>🎯 ${module.scenarios} scenarios</span>
+                                                                </div>
+                                                                
+                                                                ${isCompleted ? `
+                                                                    <div class="absolute top-2 right-2">
+                                                                        <div class="w-8 h-8 bg-green-400 rounded-full flex items-center justify-center">
+                                                                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                                                            </svg>
+                                                                        </div>
+                                                                    </div>
+                                                                ` : ''}
+                                                                
+                                                                ${!isUnlocked ? `
+                                                                    <div class="absolute inset-0 flex items-center justify-center bg-stone-200/80 rounded-2xl">
+                                                                        <div class="text-center">
+                                                                            <div class="text-2xl mb-2">🔒</div>
+                                                                            <div class="text-sm font-medium text-stone-600">Complete previous modules</div>
+                                                                        </div>
+                                                                    </div>
+                                                                ` : ''}
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!-- XP Reward Badge -->
+                                                        ${isUnlocked && !isCompleted ? `
+                                                            <div class="absolute -top-2 -right-2 bg-sunset-warm text-white text-xs font-bold px-2 py-1 rounded-full">
+                                                                +${module.xpReward} XP
+                                                            </div>
+                                                        ` : ''}
+                                                    </div>
+                                                `;
+                                            }).join('')}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <!-- Legend -->
+                        <div class="card-organic mt-12">
+                            <h3 class="heading-subsection mb-4">Legend</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-6 h-6 border-2 border-moss-gentle bg-moss-gentle/10 rounded"></div>
+                                    <span class="text-sm">Available to start</span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-6 h-6 border-2 border-green-400 bg-green-100 rounded flex items-center justify-center">
+                                        <svg class="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    </div>
+                                    <span class="text-sm">Completed</span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-6 h-6 border-2 border-stone-300 bg-stone-100 rounded opacity-60"></div>
+                                    <span class="text-sm">Locked</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    generateSkillTree() {
+        const userRole = this.state.user.currentRole;
+        const userExperience = this.state.user.experience;
+        const recommendedPath = this.getRecommendedLearningPath();
+        
+        // Create a structured skill tree based on user's path
+        const skillTree = {
+            levels: [
+                {
+                    title: "Foundation Level",
+                    description: "Essential management fundamentals",
+                    modules: [
+                        {
+                            id: 'communication-basics',
+                            title: 'Communication Fundamentals',
+                            shortDescription: 'Master clear, effective communication',
+                            icon: '💬',
+                            duration: '2-3 weeks',
+                            scenarios: 8,
+                            xpReward: 100,
+                            prerequisites: []
+                        },
+                        {
+                            id: 'feedback-essentials',
+                            title: 'Feedback Essentials',
+                            shortDescription: 'Give and receive constructive feedback',
+                            icon: '🎯',
+                            duration: '2 weeks',
+                            scenarios: 6,
+                            xpReward: 80,
+                            prerequisites: ['communication-basics']
+                        },
+                        {
+                            id: 'team-dynamics',
+                            title: 'Understanding Team Dynamics',
+                            shortDescription: 'Learn how teams function and thrive',
+                            icon: '👥',
+                            duration: '3 weeks',
+                            scenarios: 10,
+                            xpReward: 120,
+                            prerequisites: []
+                        }
+                    ]
+                },
+                {
+                    title: "Intermediate Level",
+                    description: "Advanced management skills",
+                    modules: [
+                        {
+                            id: 'conflict-resolution',
+                            title: 'Conflict Resolution',
+                            shortDescription: 'Navigate and resolve team conflicts',
+                            icon: '🤝',
+                            duration: '3-4 weeks',
+                            scenarios: 12,
+                            xpReward: 150,
+                            prerequisites: ['communication-basics', 'team-dynamics']
+                        },
+                        {
+                            id: 'performance-management',
+                            title: 'Performance Management',
+                            shortDescription: 'Set goals and manage team performance',
+                            icon: '🎢',
+                            duration: '4 weeks',
+                            scenarios: 15,
+                            xpReward: 180,
+                            prerequisites: ['feedback-essentials']
+                        },
+                        {
+                            id: 'delegation-mastery',
+                            title: 'Delegation Mastery',
+                            shortDescription: 'Effectively delegate and empower others',
+                            icon: '🎆',
+                            duration: '3 weeks',
+                            scenarios: 10,
+                            xpReward: 140,
+                            prerequisites: ['team-dynamics', 'feedback-essentials']
+                        }
+                    ]
+                },
+                {
+                    title: "Advanced Level",
+                    description: "Strategic leadership capabilities",
+                    modules: [
+                        {
+                            id: 'strategic-thinking',
+                            title: 'Strategic Leadership',
+                            shortDescription: 'Develop vision and strategic thinking',
+                            icon: '🧠',
+                            duration: '5-6 weeks',
+                            scenarios: 20,
+                            xpReward: 250,
+                            prerequisites: ['performance-management', 'conflict-resolution']
+                        },
+                        {
+                            id: 'change-leadership',
+                            title: 'Leading Change',
+                            shortDescription: 'Guide teams through transformation',
+                            icon: '🔄',
+                            duration: '4-5 weeks',
+                            scenarios: 16,
+                            xpReward: 220,
+                            prerequisites: ['delegation-mastery', 'strategic-thinking']
+                        },
+                        {
+                            id: 'executive-presence',
+                            title: 'Executive Presence',
+                            shortDescription: 'Build influence and leadership presence',
+                            icon: '🌟',
+                            duration: '6 weeks',
+                            scenarios: 18,
+                            xpReward: 300,
+                            prerequisites: ['strategic-thinking', 'change-leadership']
+                        }
+                    ]
+                }
+            ]
+        };
+        
+        return skillTree;
+    }
+    
+    generateSkillTreeConnections(skillTree) {
+        // Generate SVG paths connecting prerequisite modules
+        let connections = '';
+        
+        skillTree.levels.forEach((level, levelIndex) => {
+            level.modules.forEach((module, moduleIndex) => {
+                module.prerequisites.forEach(prereqId => {
+                    // Find the prerequisite module position
+                    const prereqPosition = this.findModulePosition(skillTree, prereqId);
+                    const currentPosition = { level: levelIndex, module: moduleIndex };
+                    
+                    if (prereqPosition) {
+                        // Calculate connection line coordinates
+                        const startY = (prereqPosition.level * 300) + 150;
+                        const endY = (currentPosition.level * 300) + 150;
+                        const startX = (prereqPosition.module * 200) + 100;
+                        const endX = (currentPosition.module * 200) + 100;
+                        
+                        connections += `
+                            <path d="M ${startX} ${startY} Q ${(startX + endX) / 2} ${(startY + endY) / 2 - 50} ${endX} ${endY}" 
+                                  stroke="#a8b5a3" stroke-width="2" fill="none" stroke-dasharray="5,5" opacity="0.6"/>
+                        `;
+                    }
+                });
+            });
+        });
+        
+        return connections;
+    }
+    
+    findModulePosition(skillTree, moduleId) {
+        for (let levelIndex = 0; levelIndex < skillTree.levels.length; levelIndex++) {
+            const level = skillTree.levels[levelIndex];
+            for (let moduleIndex = 0; moduleIndex < level.modules.length; moduleIndex++) {
+                if (level.modules[moduleIndex].id === moduleId) {
+                    return { level: levelIndex, module: moduleIndex };
+                }
+            }
+        }
+        return null;
+    }
+    
+    isModuleUnlocked(module, levelIndex, moduleIndex) {
+        // First module is always unlocked
+        if (levelIndex === 0 && moduleIndex === 0) return true;
+        
+        // Check if all prerequisites are completed
+        if (module.prerequisites.length === 0) return true;
+        
+        return module.prerequisites.every(prereqId => 
+            this.isModuleCompleted(prereqId)
+        );
+    }
+    
+    isModuleCompleted(moduleId) {
+        return this.state.user.completedModules?.includes(moduleId) || false;
+    }
+    
+    getModuleProgress(moduleId) {
+        const progress = this.state.user.moduleProgress?.[moduleId];
+        return progress ? progress.percentage : 0;
+    }
+    
+    calculateUserProgress() {
+        const skillTree = this.generateSkillTree();
+        const totalModules = skillTree.levels.reduce((total, level) => total + level.modules.length, 0);
+        const completedModules = this.state.user.completedModules?.length || 0;
+        
+        return {
+            totalModules,
+            completedModules,
+            completionPercentage: Math.round((completedModules / totalModules) * 100)
+        };
+    }
+    
+    startModule(moduleId) {
+        // Store current module and show module overview
+        this.state.currentModule = moduleId;
+        this.saveState();
+        this.showModuleOverview(moduleId);
     }
 }
 
