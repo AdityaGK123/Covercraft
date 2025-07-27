@@ -183,29 +183,33 @@ class CapabilityGym {
         const aiEnabled = window.configManager?.isAIEnabled() || false;
         
         mainContent.innerHTML = `
-            <div id="dashboardScreen" class="screen">
-                <div class="max-w-7xl mx-auto px-4 py-8">
+            <div id="dashboardScreen" class="screen" style="padding-top: 80px;">
+                <div class="container-organic">
                     <!-- Welcome Banner -->
                     <div class="gradient-bg text-white rounded-2xl p-8 mb-8">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
                             <div>
-                                <h1 class="font-montserrat text-3xl font-bold mb-2">Welcome back! Ready to soar higher?</h1>
-                                <p class="font-karla opacity-90">Continue your management skill development journey</p>
+                                <h1 class="heading-display text-white mb-2">Welcome back! Ready to soar higher?</h1>
+                                <p class="text-handwritten text-white opacity-90">Continue your management skill development journey</p>
                             </div>
                             <div class="mt-4 md:mt-0">
                                 <div class="bg-white bg-opacity-20 rounded-xl p-4">
                                     <div class="text-center">
-                                        <div class="text-2xl font-bold font-montserrat">${this.state.user.level}</div>
-                                        <div class="text-sm font-karla opacity-90">Current Level</div>
+                                        <div class="text-2xl font-bold font-montserrat text-white">${this.state.user.level}</div>
+                                        <div class="text-sm font-karla opacity-90 text-white">Current Level</div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                    
+                    <!-- AI Feature Status -->
                     ${!aiEnabled ? `
-                    <div class="card-organic mb-8 bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-400">
+                    <div class="card-organic mb-8 bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-400">
                         <div class="flex items-start gap-4">
                             <div class="flex-shrink-0">
                                 <div class="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center">
-                                    <span class="text-2xl">⚡</span>
+                                    <span class="text-2xl">🚀</span>
                                 </div>
                             </div>
                             <div class="flex-1">
@@ -244,103 +248,110 @@ class CapabilityGym {
                         </div>
                     </div>
                     `}
+                    
+                    <!-- Stats Grid -->
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-hipo-grey card-hover">
+                        <div class="card-organic">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <h3 class="font-karla text-sm font-medium text-gray-600 dark:text-gray-400">Scenarios Completed</h3>
-                                    <p class="font-montserrat text-2xl font-bold text-gray-900 dark:text-gray-100">${this.state.user.completedScenarios}</p>
+                                    <h3 class="text-body text-stone-soft">Scenarios Completed</h3>
+                                    <p class="heading-section text-soil-rich">${this.state.user.completedScenarios}</p>
                                 </div>
-                                <div class="w-12 h-12 bg-hipo-blue bg-opacity-10 rounded-full flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-hipo-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-12 h-12 bg-moss-gentle bg-opacity-20 rounded-full flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-moss-gentle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-hipo-grey card-hover">
+                        <div class="card-organic">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <h3 class="font-karla text-sm font-medium text-gray-600 dark:text-gray-400">Current Streak</h3>
-                                    <p class="font-montserrat text-2xl font-bold text-hipo-coral">${this.state.user.streak} days</p>
+                                    <h3 class="text-body text-stone-soft">Current Streak</h3>
+                                    <p class="heading-section text-soil-rich">${this.state.user.streak} days</p>
                                 </div>
-                                <div class="w-12 h-12 bg-hipo-coral bg-opacity-10 rounded-full flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-hipo-coral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path>
+                                <div class="w-12 h-12 bg-sunset-warm bg-opacity-20 rounded-full flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-sunset-warm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 716.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path>
                                     </svg>
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-hipo-grey card-hover">
+                        <div class="card-organic">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <h3 class="font-karla text-sm font-medium text-gray-600 dark:text-gray-400">Total XP</h3>
-                                    <p class="font-montserrat text-2xl font-bold text-green-500">${this.state.user.xp}</p>
+                                    <h3 class="text-body text-stone-soft">Total XP</h3>
+                                    <p class="heading-section text-soil-rich">${this.state.user.xp}</p>
                                 </div>
-                                <div class="w-12 h-12 bg-green-500 bg-opacity-10 rounded-full flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-12 h-12 bg-moss-gentle bg-opacity-20 rounded-full flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-moss-gentle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                                     </svg>
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-hipo-grey card-hover">
+                        <div class="card-organic">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <h3 class="font-karla text-sm font-medium text-gray-600 dark:text-gray-400">Next Milestone</h3>
-                                    <p class="font-montserrat text-sm font-bold text-gray-900 dark:text-gray-100">Level Up</p>
-                                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
-                                        <div class="bg-hipo-blue rounded-full h-2" style="width: ${Math.min((this.state.user.xp % 1000) / 10, 100)}%"></div>
-                                    </div>
+                                    <h3 class="text-body text-stone-soft">Achievement Level</h3>
+                                    <p class="heading-section text-soil-rich">${this.state.user.level}</p>
+                                </div>
+                                <div class="w-12 h-12 bg-sunset-warm bg-opacity-20 rounded-full flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-sunset-warm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                                    </svg>
                                 </div>
                             </div>
                         </div>
                     </div>
-
+                    
                     <!-- Quick Actions -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <button onclick="window.app.showScenarioLibrary()" class="card-organic bg-gradient-earth text-white p-6 text-left w-full">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h3 class="font-montserrat font-bold text-xl mb-2">Practice Scenarios</h3>
-                                    <p class="font-karla opacity-90">Start a new simulation and build skills</p>
-                                </div>
-                                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
+                        <div class="card-organic hover:shadow-lg transition-shadow cursor-pointer" onclick="window.app.showScenarioLibrary()">
+                            <div class="text-center py-6">
+                                <div class="text-4xl mb-4">🎯</div>
+                                <h3 class="heading-section mb-2">Practice Scenarios</h3>
+                                <p class="text-body text-stone-soft">Dive into realistic management challenges</p>
                             </div>
-                        </button>
-                        
-                        <button onclick="window.app.showProgress()" class="card-organic p-6 text-left w-full">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h3 class="font-montserrat font-bold text-xl mb-2">View Progress</h3>
-                                    <p class="font-karla text-gray-600 dark:text-gray-400">Track your skill development</p>
-                                </div>
-                                <svg class="w-10 h-10 text-hipo-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                </svg>
+                        </div>
+                        <div class="card-organic hover:shadow-lg transition-shadow cursor-pointer" onclick="window.app.showProgress()">
+                            <div class="text-center py-6">
+                                <div class="text-4xl mb-4">📈</div>
+                                <h3 class="heading-section mb-2">Track Progress</h3>
+                                <p class="text-body text-stone-soft">Monitor your skill development journey</p>
                             </div>
-                        </button>
-                        
-                        <button onclick="window.configManager?.showApiKeySetup()" class="card-organic bg-gradient-brand text-white p-6 text-left w-full">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h3 class="font-montserrat font-bold text-xl mb-2">${aiEnabled ? 'AI Settings' : 'Enable AI'}</h3>
-                                    <p class="font-karla opacity-90">${aiEnabled ? 'Manage AI configuration' : 'Unlock AI-powered scenarios'}</p>
-                                </div>
-                                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                </svg>
+                        </div>
+                        <div class="card-organic hover:shadow-lg transition-shadow cursor-pointer" onclick="window.app.showTutorial()">
+                            <div class="text-center py-6">
+                                <div class="text-4xl mb-4">📚</div>
+                                <h3 class="heading-section mb-2">Learn Basics</h3>
+                                <p class="text-body text-stone-soft">Review fundamental management concepts</p>
                             </div>
-                        </button>
+                        </div>
                     </div>
-
+                    
                     <!-- Recommended Scenarios -->
-                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-hipo-grey p-8">
-                        <h3 class="font-montserrat text-xl font-bold mb-6">Recommended for You</h3>
-                        <div id="recommendedScenarios" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            ${this.getRecommendedScenarios()}
+                    <div class="card-organic">
+                        <h2 class="heading-section mb-6">Recommended for You</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            ${this.getRecommendedScenarios().map(scenario => `
+                                <div class="border border-stone-200 rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="window.app.startScenario('${scenario.id}')">
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-10 h-10 bg-moss-gentle bg-opacity-20 rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <span class="text-lg">${scenario.icon}</span>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h3 class="font-semibold text-soil-rich mb-1">${scenario.title}</h3>
+                                            <p class="text-sm text-stone-soft mb-2">${scenario.description}</p>
+                                            <div class="flex items-center gap-2 text-xs text-stone-400">
+                                                <span>⏱️ ${scenario.duration}</span>
+                                                <span>•</span>
+                                                <span>📊 ${scenario.difficulty}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
                 </div>
