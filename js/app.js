@@ -414,24 +414,47 @@ class CapabilityGym {
             </div>
         `).join('');
     }
-
+    
+    // Show loading state
+    showLoadingState(message = 'Loading...') {
+        const mainContent = document.getElementById('mainContent');
+        mainContent.innerHTML = `
+            <div class="screen flex items-center justify-center min-h-screen">
+                <div class="text-center">
+                    <div class="loading-dots mb-4">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <p class="text-body text-lg">${message}</p>
+                </div>
+            </div>
+        `;
+    }
+    
     // Show scenario library
     showScenarioLibrary() {
-        const mainContent = document.getElementById('mainContent');
-        const aiEnabled = window.configManager?.isAIEnabled() || false;
+        // Show loading state first
+        this.showLoadingState('Loading scenario library...');
         
-        mainContent.innerHTML = `
-            <div id="scenarioLibraryScreen" class="screen">
-                <div class="max-w-7xl mx-auto px-4 py-8">
-                    <div class="flex justify-between items-center mb-8">
-                        <div>
-                            <h2 class="font-montserrat text-3xl font-bold mb-2">Scenario Library</h2>
-                            <p class="font-karla text-gray-600 dark:text-gray-400">Practice real management situations with ${aiEnabled ? 'AI-powered' : 'structured'} simulations</p>
+        // Simulate loading delay for better UX
+        setTimeout(() => {
+            const mainContent = document.getElementById('mainContent');
+            const aiEnabled = window.configManager?.isAIEnabled() || false;
+            
+            mainContent.innerHTML = `
+                <div id="scenarioLibraryScreen" class="screen" style="padding-top: 80px;">
+                    <div class="container-organic">
+                        <!-- Mobile-optimized header -->
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4">
+                            <div>
+                                <h2 class="heading-display">Scenario Library</h2>
+                                <p class="text-handwritten">Practice real management situations with ${aiEnabled ? 'AI-powered' : 'structured'} simulations</p>
+                            </div>
+                            <button onclick="window.app.showDashboard()" class="btn-organic btn-secondary w-full sm:w-auto">
+                                ← Back to Dashboard
+                            </button>
                         </div>
-                        <button onclick="window.app.showDashboard()" class="btn-organic btn-secondary">
-                            Back to Dashboard
-                        </button>
-                    </div>
 
                     ${!aiEnabled ? `
                     <div class="bg-blue-50 dark:bg-blue-900 dark:bg-opacity-20 border border-blue-200 dark:border-blue-700 rounded-xl p-6 mb-8">
@@ -459,6 +482,7 @@ class CapabilityGym {
                 </div>
             </div>
         `;
+        }, 300); // Close setTimeout
     }
 
     // Get scenario categories
@@ -536,9 +560,153 @@ class CapabilityGym {
 
     // Show scenarios for a specific category
     showCategoryScenarios(categoryId) {
-        console.log('Showing scenarios for category:', categoryId);
-        // This would show detailed scenarios for the category
-        this.showAlert('Category scenarios coming soon!');
+        const mainContent = document.getElementById('mainContent');
+        const category = this.getScenarioCategories().find(cat => cat.id === categoryId);
+        
+        if (!category) {
+            this.showAlert('Category not found');
+            return;
+        }
+        
+        const scenarios = this.getScenariosByCategory(categoryId);
+        const aiEnabled = window.configManager?.isAIEnabled() || false;
+        
+        mainContent.innerHTML = `
+            <div id="categoryScreen" class="screen" style="padding-top: 80px;">
+                <div class="container-organic">
+                    <!-- Header with breadcrumb -->
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <nav class="text-sm mb-2">
+                                <button onclick="window.app.showScenarioLibrary()" class="text-moss-gentle hover:text-soil-rich">
+                                    Scenarios
+                                </button>
+                                <span class="mx-2 text-stone-soft">&gt;</span>
+                                <span class="text-soil-rich font-semibold">${category.title}</span>
+                            </nav>
+                            <h1 class="heading-display">${category.title}</h1>
+                            <p class="text-handwritten">${category.description}</p>
+                        </div>
+                        <button onclick="window.app.showScenarioLibrary()" class="btn-organic btn-secondary">
+                            ← Back to Library
+                        </button>
+                    </div>
+                    
+                    <!-- Scenarios Grid -->
+                    <div class="scenario-grid">
+                        ${scenarios.map(scenario => `
+                            <div class="scenario-card">
+                                <div class="scenario-icon">
+                                    ${scenario.icon}
+                                </div>
+                                <h3 class="scenario-title">${scenario.title}</h3>
+                                <p class="scenario-description">${scenario.description}</p>
+                                <div class="scenario-meta">
+                                    <span class="text-xs font-medium">${scenario.difficulty}</span>
+                                    <span class="text-xs">+${scenario.xp} XP</span>
+                                </div>
+                                <div class="mt-4">
+                                    <button onclick="window.app.startScenario('${scenario.id}')" class="btn-organic btn-primary w-full">
+                                        ${aiEnabled ? '🚀 Start AI Practice' : '📝 Start Practice'}
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    ${scenarios.length === 0 ? `
+                        <div class="card-organic text-center py-16">
+                            <div class="text-6xl mb-4">🚧</div>
+                            <h2 class="heading-section mb-4">Scenarios Coming Soon!</h2>
+                            <p class="text-body mb-8">We're building amazing scenarios for this category.</p>
+                            <button onclick="window.app.showScenarioLibrary()" class="btn-organic btn-primary">
+                                Explore Other Categories
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
+    // Get scenarios by category
+    getScenariosByCategory(categoryId) {
+        const allScenarios = [
+            {
+                id: 'team-conflict-1',
+                title: 'Resolving Team Conflict',
+                description: 'Navigate a heated disagreement between two high-performing team members.',
+                category: 'team-leadership',
+                difficulty: 'Intermediate',
+                xp: 150,
+                icon: '⚖️'
+            },
+            {
+                id: 'team-motivation-1',
+                title: 'Motivating Underperformer',
+                description: 'Help a struggling team member regain confidence and productivity.',
+                category: 'team-leadership',
+                difficulty: 'Beginner',
+                xp: 100,
+                icon: '💪'
+            },
+            {
+                id: 'coaching-session-1',
+                title: 'Career Development Coaching',
+                description: 'Guide a team member through their career growth aspirations.',
+                category: 'individual-development',
+                difficulty: 'Intermediate',
+                xp: 120,
+                icon: '🎯'
+            },
+            {
+                id: 'feedback-delivery-1',
+                title: 'Delivering Difficult Feedback',
+                description: 'Provide constructive criticism while maintaining team morale.',
+                category: 'individual-development',
+                difficulty: 'Advanced',
+                xp: 200,
+                icon: '💬'
+            },
+            {
+                id: 'stakeholder-meeting-1',
+                title: 'Executive Presentation',
+                description: 'Present quarterly results to senior leadership.',
+                category: 'stakeholder-influence',
+                difficulty: 'Advanced',
+                xp: 250,
+                icon: '📊'
+            },
+            {
+                id: 'performance-review-1',
+                title: 'Performance Review Process',
+                description: 'Conduct fair and effective performance evaluations.',
+                category: 'performance-excellence',
+                difficulty: 'Intermediate',
+                xp: 180,
+                icon: '📋'
+            },
+            {
+                id: 'time-management-1',
+                title: 'Managing Competing Priorities',
+                description: 'Balance multiple urgent projects with limited resources.',
+                category: 'self-management',
+                difficulty: 'Beginner',
+                xp: 90,
+                icon: '⏰'
+            },
+            {
+                id: 'diversity-initiative-1',
+                title: 'Leading Diversity Initiative',
+                description: 'Champion inclusive practices across your organization.',
+                category: 'inclusive-leadership',
+                difficulty: 'Advanced',
+                xp: 220,
+                icon: '🌍'
+            }
+        ];
+        
+        return allScenarios.filter(scenario => scenario.category === categoryId);
     }
 
     // Start a specific scenario

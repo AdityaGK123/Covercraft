@@ -769,11 +769,51 @@ body {
     outline-offset: 2px;
 }
 
+/* Loading animations */
+.loading-dots {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.loading-dots span {
+    width: 12px;
+    height: 12px;
+    background: var(--moss-gentle);
+    border-radius: 50%;
+    animation: loading-bounce 1.4s ease-in-out infinite both;
+}
+
+.loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+.loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+.loading-dots span:nth-child(3) { animation-delay: 0s; }
+
+@keyframes loading-bounce {
+    0%, 80%, 100% {
+        transform: scale(0);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
 /* High Contrast */
 @media (prefers-contrast: high) {
     :root {
         --charcoal-soft: #000000;
         --cream-natural: #FFFFFF;
         --soil-rich: #5D4E37;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-primary: var(--charcoal-deep);
+        --text-primary: var(--cream-warm);
+        --text-secondary: var(--stone-soft);
     }
 }
