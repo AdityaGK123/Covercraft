@@ -151,29 +151,117 @@ class VoiceDetector {
     }
 
     drawVisualization() {
-        if (!this.canvas || !this.canvasContext) return;
+        if (!this.isRecording || !this.analyser) return;
+
+        this.analyser.getByteFrequencyData(this.dataArray);
+
+        // Clear canvas with gradient background
+        const gradient = this.canvasCtx.createLinearGradient(0, 0, 0, this.canvas.height);
+        gradient.addColorStop(0, '#1e293b');
+        gradient.addColorStop(1, '#0f172a');
+        this.canvasCtx.fillStyle = gradient;
+        this.canvasCtx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Calculate average volume for bubble generation
+        const average = this.dataArray.reduce((sum, value) => sum + value, 0) / this.dataArray.length;
         
-        const width = this.canvas.width;
-        const height = this.canvas.height;
-        
-        // Clear canvas
-        this.canvasContext.fillStyle = '#111827';
-        this.canvasContext.fillRect(0, 0, width, height);
-        
-        // Draw frequency bars
-        const barWidth = width / this.dataArray.length * 2.5;
-        let x = 0;
-        
-        for (let i = 0; i < this.dataArray.length; i++) {
-            const barHeight = (this.dataArray[i] / 255) * height;
+        // Generate new bubbles based on audio intensity
+        if (average > 30) {
+            this.generateMusicBubbles(average);
+        }
+
+        // Draw and update existing bubbles
+        this.updateMusicBubbles();
+
+        // Draw frequency blocks (tetris-style)
+        this.drawFrequencyBlocks();
+
+        requestAnimationFrame(() => this.drawVisualization());
+    }
+
+    generateMusicBubbles(intensity) {
+        if (Math.random() < 0.3) { // 30% chance to generate bubble
+            const bubble = {
+                x: Math.random() * this.canvas.width,
+                y: this.canvas.height,
+                size: Math.random() * 20 + 10,
+                speed: Math.random() * 2 + 1,
+                symbol: this.noteSymbols[Math.floor(Math.random() * this.noteSymbols.length)],
+                color: this.colors[Math.floor(Math.random() * this.colors.length)],
+                opacity: 1,
+                rotation: 0,
+                rotationSpeed: (Math.random() - 0.5) * 0.2
+            };
+            this.musicBubbles.push(bubble);
+        }
+
+        // Limit number of bubbles
+        if (this.musicBubbles.length > 15) {
+            this.musicBubbles.shift();
+        }
+    }
+
+    updateMusicBubbles() {
+        this.musicBubbles = this.musicBubbles.filter(bubble => {
+            // Update position
+            bubble.y -= bubble.speed;
+            bubble.rotation += bubble.rotationSpeed;
+            bubble.opacity -= 0.008;
+
+            // Draw bubble
+            this.canvasCtx.save();
+            this.canvasCtx.globalAlpha = bubble.opacity;
+            this.canvasCtx.translate(bubble.x, bubble.y);
+            this.canvasCtx.rotate(bubble.rotation);
             
-            // Color based on intensity
-            const intensity = this.dataArray[i] / 255;
-            const hue = intensity * 120; // Green to red
-            this.canvasContext.fillStyle = `hsl(${hue}, 70%, 50%)`;
+            // Draw bubble background
+            this.canvasCtx.fillStyle = bubble.color;
+            this.canvasCtx.beginPath();
+            this.canvasCtx.arc(0, 0, bubble.size, 0, Math.PI * 2);
+            this.canvasCtx.fill();
             
-            this.canvasContext.fillRect(x, height - barHeight, barWidth, barHeight);
-            x += barWidth + 1;
+            // Draw music symbol
+            this.canvasCtx.fillStyle = 'white';
+            this.canvasCtx.font = `${bubble.size}px Arial`;
+            this.canvasCtx.textAlign = 'center';
+            this.canvasCtx.textBaseline = 'middle';
+            this.canvasCtx.fillText(bubble.symbol, 0, 0);
+            
+            this.canvasCtx.restore();
+
+            return bubble.opacity > 0 && bubble.y > -bubble.size;
+        });
+    }
+
+    drawFrequencyBlocks() {
+        const blockWidth = 8;
+        const blockHeight = 6;
+        const gap = 2;
+        const cols = Math.floor(this.canvas.width / (blockWidth + gap));
+        const rows = Math.floor(this.canvas.height / (blockHeight + gap));
+
+        for (let i = 0; i < Math.min(cols, this.dataArray.length); i++) {
+            const value = this.dataArray[i];
+            const blockCount = Math.floor((value / 255) * rows);
+            
+            for (let j = 0; j < blockCount; j++) {
+                const x = i * (blockWidth + gap);
+                const y = this.canvas.height - (j + 1) * (blockHeight + gap);
+                
+                // Color based on frequency and intensity
+                const hue = (i / cols) * 360;
+                const saturation = 70;
+                const lightness = 50 + (j / rows) * 30;
+                
+                this.canvasCtx.fillStyle = `hsla(${hue}, ${saturation}%, ${lightness}%, 0.8)`;
+                this.canvasCtx.fillRect(x, y, blockWidth, blockHeight);
+                
+                // Add glow effect
+                this.canvasCtx.shadowColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+                this.canvasCtx.shadowBlur = 3;
+                this.canvasCtx.fillRect(x, y, blockWidth, blockHeight);
+                this.canvasCtx.shadowBlur = 0;
+            }
         }
     }
 

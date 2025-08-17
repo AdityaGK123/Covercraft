@@ -544,6 +544,27 @@ body {
     font-size: 0.9rem;
 }
 
+/* Result Actions */
+.result-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    justify-content: center;
+}
+
+.result-actions button {
+    flex: 1;
+    max-width: 150px;
+}
+
+/* Enhanced Voice Canvas */
+#voice-canvas {
+    border-radius: 12px;
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(59, 130, 246, 0.2);
+}
+
 /* Enhanced Calibration Result */
 .calibration-result .result-card {
     background: var(--card-bg);

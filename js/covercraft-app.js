@@ -86,6 +86,11 @@ class CoverCraftApp {
             const selectedScale = document.getElementById('western-scale-select').value;
             this.playScaleSample(selectedScale);
         });
+
+        document.getElementById('play-detected-scale').addEventListener('click', () => {
+            const detectedScale = this.userProfile.preferredKey || 'C Major';
+            this.playScaleSample(detectedScale);
+        });
         const proceedBtn = document.getElementById('proceed-to-upload');
         if (proceedBtn) {
             proceedBtn.addEventListener('click', () => this.showScreen('song-upload-screen'));
