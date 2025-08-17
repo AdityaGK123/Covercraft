@@ -22,16 +22,18 @@ class CoverCraftApp {
         this.aiEngine = new AIEngine();
         this.audioEngine = window.AudioEngine;
         
+        // Initialize social integration and editor
+        this.socialIntegration = new SocialIntegration();
+        this.coverEditor = new CoverEditor();
+        
         this.init();
     }
 
     init() {
         this.setupEventListeners();
         this.showLoadingScreen();
-        
-        setTimeout(() => {
-            this.showScreen('welcome-screen');
-        }, 2000);
+        // Go back to welcome screen
+        this.showScreen('welcome-screen');
     }
 
     setupEventListeners() {
@@ -90,7 +92,7 @@ class CoverCraftApp {
         });
 
         document.getElementById('play-detected-scale').addEventListener('click', () => {
-            const detectedScale = this.userProfile.preferredKey || 'C Major';
+            const detectedScale = this.userVocalRange?.detectedKey || this.userProfile.preferredKey || 'C Major';
             this.playScaleSample(detectedScale);
         });
         const proceedBtn = document.getElementById('proceed-to-upload');
@@ -185,80 +187,45 @@ class CoverCraftApp {
     }
 
     setupStyleSelection() {
-        // Mood selection
+        // Mood selection with enhanced feedback
         document.querySelectorAll('.mood-option').forEach(option => {
             option.addEventListener('click', (e) => {
-                if (e.target.classList.contains('preview-btn')) {
-                    e.stopPropagation();
-                    this.playStylePreview(e.target.getAttribute('data-style'));
-                    return;
-                }
-                document.querySelectorAll('.mood-option').forEach(opt => opt.classList.remove('active'));
-                e.currentTarget.classList.add('active');
+                document.querySelectorAll('.mood-option').forEach(opt => opt.classList.remove('selected'));
+                e.currentTarget.classList.add('selected');
                 this.selectedMood = e.currentTarget.getAttribute('data-mood');
                 this.updateGenerateButton();
+                this.showMessage(`Selected ${this.selectedMood} mood`, 'info');
             });
         });
 
-        // Genre selection
+        // Genre selection with enhanced feedback
         document.querySelectorAll('.genre-option').forEach(option => {
             option.addEventListener('click', (e) => {
-                if (e.target.classList.contains('preview-btn')) {
-                    e.stopPropagation();
-                    this.playStylePreview(e.target.getAttribute('data-style'));
-                    return;
-                }
-                document.querySelectorAll('.genre-option').forEach(opt => opt.classList.remove('active'));
-                e.currentTarget.classList.add('active');
+                document.querySelectorAll('.genre-option').forEach(opt => opt.classList.remove('selected'));
+                e.currentTarget.classList.add('selected');
                 this.selectedGenre = e.currentTarget.getAttribute('data-genre');
                 this.updateGenerateButton();
+                this.showMessage(`Selected ${this.selectedGenre} style`, 'info');
             });
         });
 
-        // Preview buttons
+        // Enhanced preview buttons with realistic samples
         document.querySelectorAll('.preview-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                this.playStylePreview(e.target.getAttribute('data-style'));
+                const style = e.currentTarget.getAttribute('data-style');
+                this.previewRealisticStyle(style);
             });
         });
 
-        // Tempo control
-        const styleTempoSlider = document.getElementById('style-tempo-slider');
-        const styleTempoValue = document.getElementById('style-tempo-value');
-        const previewTempoBtn = document.getElementById('preview-tempo');
-
-        if (styleTempoSlider && styleTempoValue) {
-            styleTempoSlider.addEventListener('input', (e) => {
-                const value = e.target.value;
-                styleTempoValue.textContent = value;
-                this.selectedTempo = parseInt(value);
-            });
-        }
-
-        if (previewTempoBtn) {
-            previewTempoBtn.addEventListener('click', () => {
-                this.previewCurrentStyleWithTempo();
-            });
-        }
-
-        // Generate button
-        const generateBtn = document.getElementById('generate-backing-track');
-        if (generateBtn) {
-            generateBtn.addEventListener('click', () => this.generateBackingTrack());
-        }
-    }
-
-    setupTrackCustomization() {
-        document.querySelectorAll('.track-toggle').forEach(toggle => {
-            toggle.addEventListener('change', (e) => {
-                const track = e.target.getAttribute('data-track');
-                this.toggleTrack(track, e.target.checked);
-            });
+        // Generate button with proper validation
+        document.getElementById('generate-backing-track')?.addEventListener('click', () => {
+            if (this.selectedMood && this.selectedGenre) {
+                this.generateBackingTrack();
+            } else {
+                this.showMessage('Please select both mood and style before generating', 'error');
+            }
         });
-
-        const tempoSlider = document.getElementById('tempo-slider');
-        const tempoValue = document.getElementById('tempo-value');
         
         if (tempoSlider && tempoValue) {
             tempoSlider.addEventListener('input', (e) => {
@@ -323,8 +290,11 @@ class CoverCraftApp {
         const downloadBtn = document.getElementById('download-cover');
         if (downloadBtn) downloadBtn.addEventListener('click', () => this.downloadCover());
 
-        const createAnotherBtn = document.getElementById('create-another-cover');
-        if (createAnotherBtn) createAnotherBtn.addEventListener('click', () => this.createAnotherCover());
+        // Export screen
+        document.getElementById('download-cover')?.addEventListener('click', () => this.downloadCover());
+        document.getElementById('create-another-cover')?.addEventListener('click', () => this.createAnotherCover());
+        document.getElementById('edit-cover')?.addEventListener('click', () => this.openCoverEditor());
+        document.getElementById('quick-share')?.addEventListener('click', () => this.openSocialShare());
     }
 
     // Core Methods
@@ -430,28 +400,27 @@ class CoverCraftApp {
         const results = this.voiceDetection.stop();
         
         if (results && results.confidence > 0.2) {
+            this.userVocalRange = {
+                detectedKey: results.preferredKey,
+                range: `${results.minNote} - ${results.maxNote}`,
+                confidence: results.confidence
+            };
             this.userProfile.voiceRange = { min: results.minNote, max: results.maxNote };
             this.userProfile.preferredKey = results.preferredKey;
+            
+            // Update UI with actual detected results
+            document.getElementById('user-key').textContent = results.preferredKey;
+            document.getElementById('user-range').textContent = `${results.minNote} - ${results.maxNote}`;
+            
+            // Show Indian scale translations
+            const translations = this.translateToIndianScales(results.preferredKey);
+            document.getElementById('hindustani-scale').textContent = translations.hindustani;
+            document.getElementById('carnatic-scale').textContent = translations.carnatic;
+            
+            // Show result
+            document.getElementById('calibration-result').style.display = 'block';
         } else {
-            // Fallback values for poor detection
-            this.userProfile.voiceRange = { min: 'C3', max: 'G4' };
-            this.userProfile.preferredKey = 'C Major';
-        }
-        
-        // Translate to Indian scales
-        const scaleTranslations = this.translateToIndianScales(this.userProfile.preferredKey);
-        
-        document.getElementById('user-key').textContent = this.userProfile.preferredKey;
-        document.getElementById('user-range').textContent = `${this.userProfile.voiceRange.min} - ${this.userProfile.voiceRange.max}`;
-        document.getElementById('hindustani-scale').textContent = scaleTranslations.hindustani;
-        document.getElementById('carnatic-scale').textContent = scaleTranslations.carnatic;
-        document.getElementById('calibration-result').style.display = 'block';
-        
-        // Show proceed button instead of auto-proceeding
-        const proceedBtn = document.getElementById('proceed-to-upload');
-        if (proceedBtn) {
-            proceedBtn.style.display = 'block';
-            proceedBtn.disabled = false;
+            this.showMessage('Voice detection failed. Please try again or select manually.', 'error');
         }
     }
 
@@ -495,21 +464,46 @@ class CoverCraftApp {
                 currentStep++;
                 setTimeout(processStep, 800);
             } else {
-                // Complete processing
-                const songData = {
-                    title: 'Sample Song Title',
-                    artist: 'Sample Artist', 
-                    duration: '3:45',
-                    videoId: videoId,
-                    isYouTube: true
-                };
-                
-                this.hideLoadingState('youtube-processing');
-                this.displaySongPreview(songData);
+                // Complete processing with actual YouTube metadata
+                this.fetchYouTubeMetadata(videoId).then(metadata => {
+                    const songData = {
+                        title: metadata.title || 'YouTube Video',
+                        artist: metadata.channelTitle || 'Unknown Artist', 
+                        duration: metadata.duration || '0:00',
+                        videoId: videoId,
+                        isYouTube: true,
+                        thumbnailUrl: metadata.thumbnailUrl
+                    };
+                    
+                    this.hideLoadingState('youtube-processing');
+                    this.displaySongPreview(songData);
+                });
             }
         };
         
         processStep();
+    }
+
+    async fetchYouTubeMetadata(videoId) {
+        try {
+            // Use YouTube oEmbed API for basic metadata
+            const response = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
+            const data = await response.json();
+            
+            return {
+                title: data.title,
+                channelTitle: data.author_name,
+                thumbnailUrl: data.thumbnail_url,
+                duration: '0:00' // oEmbed doesn't provide duration
+            };
+        } catch (error) {
+            console.warn('Failed to fetch YouTube metadata:', error);
+            return {
+                title: 'YouTube Video',
+                channelTitle: 'Unknown Artist',
+                duration: '0:00'
+            };
+        }
     }
 
     processAudioFile(file) {
@@ -518,43 +512,42 @@ class CoverCraftApp {
         const reader = new FileReader();
         reader.onload = (e) => {
             this.currentSong = {
-                title: file.name.replace(/\.[^/.]+$/, ""),
-                artist: 'Unknown Artist',
-                duration: '0:00',
-                audioUrl: e.target.result
-            };
-            this.showSongPreview();
         };
-        reader.readAsDataURL(file);
-    }
+        this.displaySongPreview(this.currentSong);
+    };
+    reader.readAsDataURL(file);
+}
 
     displaySongPreview(songData) {
+        this.currentSong = songData;
+        
+        // Update preview UI
         document.getElementById('song-title').textContent = songData.title;
         document.getElementById('song-artist').textContent = songData.artist;
         document.getElementById('song-duration').textContent = `Duration: ${songData.duration}`;
         
-        // Parse duration and check if > 5 minutes
-        const durationParts = songData.duration.split(':');
-        const totalMinutes = parseInt(durationParts[0]) + (parseInt(durationParts[1]) / 60);
-        
-        if (totalMinutes > 5) {
-            document.getElementById('song-length-warning').style.display = 'block';
-        } else {
-            document.getElementById('song-length-warning').style.display = 'none';
-        }
-        
-        // Show YouTube preview or audio controls
+        // Show YouTube preview if applicable
         if (songData.isYouTube && songData.videoId) {
-            this.setupYouTubePreview(songData.videoId);
+            const iframe = document.getElementById('youtube-iframe');
+            const youtubePreview = document.getElementById('youtube-preview');
+            
+            // Set iframe src with proper parameters for embedding
+            iframe.src = `https://www.youtube.com/embed/${songData.videoId}?enablejsapi=1&origin=${window.location.origin}`;
+            iframe.style.display = 'block';
+            youtubePreview.style.display = 'block';
+            
+            // Hide audio controls for YouTube
+            document.getElementById('song-audio').style.display = 'none';
         } else if (songData.audioUrl) {
+            // Show audio controls for uploaded files
             const audioElement = document.getElementById('song-audio');
             audioElement.src = songData.audioUrl;
             audioElement.style.display = 'block';
             document.getElementById('youtube-preview').style.display = 'none';
         }
         
+        // Show preview section
         document.getElementById('song-preview').style.display = 'block';
-        this.currentSong = songData;
     }
 
     setupYouTubePreview(videoId) {
@@ -645,6 +638,16 @@ class CoverCraftApp {
     }
 
     async generateBackingTrack() {
+        if (!this.selectedMood || !this.selectedGenre) {
+            this.showMessage('Please select both mood and style', 'error');
+            return;
+        }
+        
+        if (!this.currentSong) {
+            this.showMessage('Please select a song first', 'error');
+            return;
+        }
+        
         this.showScreen('track-generation-screen');
         
         try {
@@ -730,24 +733,11 @@ class CoverCraftApp {
     }
 
     showQuotaExceededMessage() {
-        this.showMessage(`
-            <div class="quota-message">
-                <h4>🎵 Daily Quota Reached</h4>
-                <p>You've used your 3 free AI-generated tracks for today!</p>
-                <p>Don't worry - we're still creating amazing backing tracks using our advanced audio engine.</p>
-                <button onclick="this.parentElement.parentElement.style.display='none'" class="primary-btn">Continue</button>
-            </div>
-        `, 'info', 10000);
+        this.showMessage('Upgrade to premium for unlimited covers!', 'info');
     }
 
     showRateLimitMessage() {
-        this.showMessage(`
-            <div class="rate-limit-message">
-                <h4>⏱️ Slow Down There!</h4>
-                <p>You're generating tracks too quickly. Please wait a moment before trying again.</p>
-                <p>This helps us provide the best AI experience for everyone.</p>
-            </div>
-        `, 'warning', 5000);
+        this.showMessage('Slow down there! Try again in a minute.', 'warning');
     }
 
     toggleTrack(track, enabled) {
@@ -1061,6 +1051,30 @@ class CoverCraftApp {
         }
     }
 
+    // Social Media & Editor Integration
+    openCoverEditor() {
+        if (this.recordedVideo || this.recordedAudio) {
+            const videoBlob = this.recordedVideo;
+            const audioBlob = this.recordedAudio;
+            
+            this.coverEditor.open(videoBlob, audioBlob, (editedVideo) => {
+                // After editing is complete, open social sharing
+                this.socialIntegration.open(editedVideo);
+            });
+        } else {
+            this.showMessage('No recorded cover found to edit', 'error');
+        }
+    }
+
+    openSocialShare() {
+        if (this.recordedVideo || this.recordedAudio) {
+            const finalVideo = this.recordedVideo;
+            this.socialIntegration.open(finalVideo);
+        } else {
+            this.showMessage('No recorded cover found to share', 'error');
+        }
+    }
+
     showPremiumModal() {
         this.showMessage('Upgrade to premium for unlimited covers!', 'info');
     }
@@ -1229,28 +1243,29 @@ class CoverCraftApp {
         // Show preview feedback
         this.showMessage(`🎵 Playing ${style} preview...`, 'info', 3000);
         
-        // Style-specific instrument patterns (20-second previews)
+        // Full musical section previews (30-second integrated demos)
         const stylePatterns = {
-            'chill': this.generateChillPattern(audioContext, this.selectedTempo || 120),
-            'emotional': this.generateEmotionalPattern(audioContext, this.selectedTempo || 120),
-            'energetic': this.generateEnergeticPattern(audioContext, this.selectedTempo || 120),
-            'romantic': this.generateRomanticPattern(audioContext, this.selectedTempo || 120),
-            'indian-indie': this.generateIndianIndiePattern(audioContext, this.selectedTempo || 120),
-            'bollywood': this.generateBollywoodPattern(audioContext, this.selectedTempo || 120),
-            'indian-classical': this.generateClassicalPattern(audioContext, this.selectedTempo || 120),
-            'western-pop': this.generateWesternPopPattern(audioContext, this.selectedTempo || 120)
+            'chill': this.generateChillSection(audioContext, this.selectedTempo || 120),
+            'emotional': this.generateEmotionalSection(audioContext, this.selectedTempo || 120),
+            'energetic': this.generateEnergeticSection(audioContext, this.selectedTempo || 120),
+            'romantic': this.generateRomanticSection(audioContext, this.selectedTempo || 120),
+            'indie-acoustic': this.generateIndieAcousticSection(audioContext, this.selectedTempo || 120),
+            'bollywood': this.generateBollywoodSection(audioContext, this.selectedTempo || 120),
+            'singer-songwriter': this.generateSingerSongwriterSection(audioContext, this.selectedTempo || 120),
+            'folk-pop': this.generateFolkPopSection(audioContext, this.selectedTempo || 120),
+            'neo-soul': this.generateNeoSoulSection(audioContext, this.selectedTempo || 120)
         };
 
         const pattern = stylePatterns[style] || stylePatterns['chill'];
         pattern();
         
-        // Auto-stop after 20 seconds
+        // Auto-stop after 30 seconds
         setTimeout(() => {
-            if (this.currentPreviewContext === audioContext) {
-                audioContext.close();
+            if (this.currentPreviewContext) {
+                this.currentPreviewContext.close();
                 this.currentPreviewContext = null;
             }
-        }, 20000);
+        }, 30000);
     }
 
     previewCurrentStyleWithTempo() {
@@ -1274,30 +1289,15 @@ class CoverCraftApp {
         return null;
     }
 
-    generateChillPattern(audioContext, tempo = 120) {
+    generateChillSection(audioContext, tempo) {
         return () => {
-            // Piano-based chill pattern
-            const pianoNotes = [261.63, 329.63, 392.00, 523.25]; // C, E, G, C
-            const beatInterval = 60 / tempo; // Convert BPM to seconds per beat
+            const beatDuration = 60 / tempo;
+            const totalDuration = 30;
             
-            for (let i = 0; i < 8; i++) {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.setValueAtTime(pianoNotes[i % 4], audioContext.currentTime);
-                oscillator.type = 'triangle';
-                
-                const startTime = audioContext.currentTime + i * beatInterval;
-                gainNode.gain.setValueAtTime(0, startTime);
-                gainNode.gain.linearRampToValueAtTime(0.2, startTime + 0.1);
-                gainNode.gain.linearRampToValueAtTime(0, startTime + beatInterval * 0.8);
-                
-                oscillator.start(startTime);
-                oscillator.stop(startTime + beatInterval);
-            }
+            // Chill: Soft electric piano + Subtle shakers + Warm strings
+            this.createChillElectricPiano(audioContext, beatDuration, totalDuration);
+            this.createChillPercussion(audioContext, beatDuration, totalDuration);
+            this.createChillStrings(audioContext, beatDuration, totalDuration);
         };
     }
 
@@ -1376,53 +1376,28 @@ class CoverCraftApp {
         };
     }
 
-    generateIndianIndiePattern(audioContext) {
+    generateIndieAcousticSection(audioContext, tempo) {
         return () => {
-            // Guitar with tabla rhythm
-            const indieNotes = [196.00, 220.00, 246.94, 293.66]; // G, A, B, D
+            const beatDuration = 60 / tempo;
+            const totalDuration = 30;
             
-            for (let i = 0; i < 8; i++) {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.setValueAtTime(indieNotes[i % 4], audioContext.currentTime);
-                oscillator.type = 'triangle';
-                
-                gainNode.gain.setValueAtTime(0, audioContext.currentTime + i * 2.5);
-                gainNode.gain.linearRampToValueAtTime(0.25, audioContext.currentTime + i * 2.5 + 0.1);
-                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + i * 2.5 + 1.5);
-                
-                oscillator.start(audioContext.currentTime + i * 2.5);
-                oscillator.stop(audioContext.currentTime + i * 2.5 + 2);
-            }
+            // Indie acoustic: Fingerpicked guitar + Soft percussion + Light strings
+            this.createIndieAcousticGuitar(audioContext, beatDuration, totalDuration);
+            this.createIndiePercussion(audioContext, beatDuration, totalDuration);
+            this.createIndieStrings(audioContext, beatDuration, totalDuration);
         };
     }
 
-    generateBollywoodPattern(audioContext) {
+    generateBollywoodSection(audioContext, tempo) {
         return () => {
-            // Classic Bollywood orchestration
-            const bollywoodNotes = [261.63, 329.63, 392.00, 523.25, 659.25];
+            const beatDuration = 60 / tempo;
+            const totalDuration = 30;
             
-            for (let i = 0; i < 8; i++) {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.setValueAtTime(bollywoodNotes[i % 5], audioContext.currentTime);
-                oscillator.type = 'sawtooth';
-                
-                gainNode.gain.setValueAtTime(0, audioContext.currentTime + i * 2.5);
-                gainNode.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + i * 2.5 + 0.2);
-                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + i * 2.5 + 2);
-                
-                oscillator.start(audioContext.currentTime + i * 2.5);
-                oscillator.stop(audioContext.currentTime + i * 2.5 + 2.5);
-            }
+            // Full Bollywood arrangement with tabla, harmonium, strings, and melody
+            this.createBollywoodTabla(audioContext, beatDuration, totalDuration);
+            this.createBollywoodHarmonium(audioContext, beatDuration, totalDuration);
+            this.createBollywoodStrings(audioContext, beatDuration, totalDuration);
+            this.createBollywoodMelody(audioContext, beatDuration, totalDuration);
         };
     }
 
@@ -1474,6 +1449,940 @@ class CoverCraftApp {
                 oscillator.stop(audioContext.currentTime + i * 2.5 + 2.5);
             }
         };
+    }
+
+    // Full musical section generators for integrated demos
+    createBollywoodTabla(audioContext, beatDuration, totalDuration) {
+        const beats = Math.floor(totalDuration / beatDuration);
+        for (let beat = 0; beat < beats; beat++) {
+            const startTime = audioContext.currentTime + beat * beatDuration;
+            
+            // Dha (bass stroke)
+            if (beat % 4 === 0 || beat % 4 === 2) {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain).connect(audioContext.destination);
+                
+                osc.frequency.setValueAtTime(120, startTime);
+                osc.type = 'triangle';
+                gain.gain.setValueAtTime(0.4, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+                
+                osc.start(startTime);
+                osc.stop(startTime + 0.3);
+            }
+            
+            // Ti (treble stroke)
+            if (beat % 8 === 3 || beat % 8 === 7) {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain).connect(audioContext.destination);
+                
+                osc.frequency.setValueAtTime(200, startTime);
+                osc.type = 'sawtooth';
+                gain.gain.setValueAtTime(0.3, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.2);
+                
+                osc.start(startTime);
+                osc.stop(startTime + 0.2);
+            }
+        }
+    }
+
+    createBollywoodHarmonium(audioContext, beatDuration, totalDuration) {
+        const chordProgression = [
+            [261.63, 329.63, 392.00], // C major
+            [293.66, 369.99, 440.00], // D minor
+            [329.63, 415.30, 493.88], // E minor
+            [261.63, 329.63, 392.00]  // C major
+        ];
+        
+        const chordDuration = beatDuration * 4;
+        const chords = Math.floor(totalDuration / chordDuration);
+        
+        for (let c = 0; c < chords; c++) {
+            const chord = chordProgression[c % 4];
+            const startTime = audioContext.currentTime + c * chordDuration;
+            
+            chord.forEach((freq, noteIndex) => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain).connect(audioContext.destination);
+                
+                osc.frequency.setValueAtTime(freq, startTime);
+                osc.type = 'sawtooth';
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.15 - noteIndex * 0.02, startTime + 0.5);
+                gain.gain.linearRampToValueAtTime(0.1 - noteIndex * 0.02, startTime + chordDuration - 0.5);
+                gain.gain.linearRampToValueAtTime(0, startTime + chordDuration);
+                
+                osc.start(startTime);
+                osc.stop(startTime + chordDuration);
+            });
+        }
+    }
+
+    createBollywoodStrings(audioContext, beatDuration, totalDuration) {
+        const stringNotes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        const phraseDuration = beatDuration * 8;
+        const phrases = Math.floor(totalDuration / phraseDuration);
+        
+        for (let p = 0; p < phrases; p++) {
+            const startTime = audioContext.currentTime + p * phraseDuration;
+            
+            stringNotes.forEach((freq, noteIndex) => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain).connect(audioContext.destination);
+                
+                osc.frequency.setValueAtTime(freq, startTime + noteIndex * beatDuration);
+                osc.type = 'sawtooth';
+                
+                const noteStart = startTime + noteIndex * beatDuration;
+                gain.gain.setValueAtTime(0, noteStart);
+                gain.gain.linearRampToValueAtTime(0.08, noteStart + 0.3);
+                gain.gain.linearRampToValueAtTime(0.05, noteStart + beatDuration * 1.5);
+                gain.gain.linearRampToValueAtTime(0, noteStart + beatDuration * 2);
+                
+                osc.start(noteStart);
+                osc.stop(noteStart + beatDuration * 2);
+            });
+        }
+    }
+
+    createBollywoodMelody(audioContext, beatDuration, totalDuration) {
+        const melodyNotes = [392.00, 440.00, 493.88, 523.25, 587.33, 659.25]; // G4-E5
+        const noteDuration = beatDuration * 0.75;
+        const totalNotes = Math.floor(totalDuration / noteDuration);
+        
+        for (let n = 0; n < totalNotes; n++) {
+            if (Math.random() > 0.3) { // 70% chance to play note
+                const freq = melodyNotes[Math.floor(Math.random() * melodyNotes.length)];
+                const startTime = audioContext.currentTime + n * noteDuration;
+                
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain).connect(audioContext.destination);
+                
+                osc.frequency.setValueAtTime(freq, startTime);
+                osc.type = 'triangle';
+                
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.12, startTime + 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + noteDuration);
+                
+                osc.start(startTime);
+                osc.stop(startTime + noteDuration);
+            }
+        }
+    }
+
+    createIndieAcousticGuitar(audioContext, beatDuration, totalDuration) {
+        const chords = [
+            [82.41, 110.00, 146.83, 196.00], // Em
+            [110.00, 146.83, 196.00, 246.94], // Am
+            [98.00, 130.81, 164.81, 196.00], // G
+            [87.31, 116.54, 146.83, 174.61]  // D
+        ];
+        
+        const strumPattern = [1, 0, 1, 0, 1, 1, 0, 1]; // Down-up pattern
+        const chordDuration = beatDuration * 8;
+        const totalChords = Math.floor(totalDuration / chordDuration);
+        
+        for (let c = 0; c < totalChords; c++) {
+            const chord = chords[c % 4];
+            const chordStart = audioContext.currentTime + c * chordDuration;
+            
+            strumPattern.forEach((strum, beatIndex) => {
+                if (strum) {
+                    const strumTime = chordStart + beatIndex * beatDuration;
+                    
+                    chord.forEach((freq, stringIndex) => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain).connect(audioContext.destination);
+                        
+                        osc.frequency.setValueAtTime(freq, strumTime + stringIndex * 0.01);
+                        osc.type = 'sawtooth';
+                        
+                        gain.gain.setValueAtTime(0, strumTime);
+                        gain.gain.linearRampToValueAtTime(0.15 - stringIndex * 0.02, strumTime + 0.05);
+                        gain.gain.exponentialRampToValueAtTime(0.01, strumTime + beatDuration * 0.8);
+                        
+                        osc.start(strumTime);
+                        osc.stop(strumTime + beatDuration);
+                    });
+                }
+            });
+        }
+    }
+
+    createIndiePercussion(audioContext, beatDuration, totalDuration) {
+        const beats = Math.floor(totalDuration / beatDuration);
+        
+        for (let beat = 0; beat < beats; beat++) {
+            const startTime = audioContext.currentTime + beat * beatDuration;
+            
+            // Shaker on every beat
+            if (Math.random() > 0.2) {
+                const noise = audioContext.createBufferSource();
+                const buffer = audioContext.createBuffer(1, 1024, audioContext.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < 1024; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                noise.buffer = buffer;
+                
+                const gain = audioContext.createGain();
+                noise.connect(gain).connect(audioContext.destination);
+                
+                gain.gain.setValueAtTime(0.08, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.1);
+                
+                noise.start(startTime);
+                noise.stop(startTime + 0.1);
+            }
+        }
+    }
+
+    createIndieStrings(audioContext, beatDuration, totalDuration) {
+        const stringChords = [
+            [196.00, 246.94, 293.66, 349.23], // G-B-D-F
+            [220.00, 277.18, 329.63, 415.30], // A-C#-E-G#
+        ];
+        
+        const phraseDuration = beatDuration * 16;
+        const phrases = Math.floor(totalDuration / phraseDuration);
+        
+        for (let p = 0; p < phrases; p++) {
+            const chord = stringChords[p % 2];
+            const startTime = audioContext.currentTime + p * phraseDuration;
+            
+            chord.forEach((freq, noteIndex) => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain).connect(audioContext.destination);
+                
+                osc.frequency.setValueAtTime(freq, startTime);
+                osc.type = 'sawtooth';
+                
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.06 - noteIndex * 0.01, startTime + 2);
+                gain.gain.linearRampToValueAtTime(0.04 - noteIndex * 0.01, startTime + phraseDuration - 2);
+                gain.gain.linearRampToValueAtTime(0, startTime + phraseDuration);
+                
+                osc.start(startTime);
+                osc.stop(startTime + phraseDuration);
+            });
+        }
+    }
+
+    createChillElectricPiano(audioContext, beatDuration, totalDuration) {
+        const chords = [
+            [261.63, 329.63, 392.00, 523.25], // Cmaj7
+            [246.94, 311.13, 369.99, 493.88], // Bm7
+            [220.00, 277.18, 329.63, 440.00], // Am7
+            [196.00, 246.94, 293.66, 392.00]  // Gm7
+        ];
+        
+        const chordDuration = beatDuration * 4;
+        const totalChords = Math.floor(totalDuration / chordDuration);
+        
+        for (let c = 0; c < totalChords; c++) {
+            const chord = chords[c % 4];
+            const startTime = audioContext.currentTime + c * chordDuration;
+            
+            chord.forEach((freq, noteIndex) => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain).connect(audioContext.destination);
+                
+                osc.frequency.setValueAtTime(freq, startTime);
+                osc.type = 'sine';
+                
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.08 - noteIndex * 0.01, startTime + 0.3);
+                gain.gain.linearRampToValueAtTime(0.05 - noteIndex * 0.01, startTime + chordDuration - 0.5);
+                gain.gain.linearRampToValueAtTime(0, startTime + chordDuration);
+                
+                osc.start(startTime);
+                osc.stop(startTime + chordDuration);
+            });
+        }
+    }
+
+    createChillPercussion(audioContext, beatDuration, totalDuration) {
+        const beats = Math.floor(totalDuration / beatDuration);
+        
+        for (let beat = 0; beat < beats; beat++) {
+            const startTime = audioContext.currentTime + beat * beatDuration;
+            
+            // Soft shaker every 2 beats
+            if (beat % 2 === 0 && Math.random() > 0.3) {
+                const noise = audioContext.createBufferSource();
+                const buffer = audioContext.createBuffer(1, 512, audioContext.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < 512; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                noise.buffer = buffer;
+                
+                const gain = audioContext.createGain();
+                noise.connect(gain).connect(audioContext.destination);
+                
+                gain.gain.setValueAtTime(0.04, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.2);
+                
+                noise.start(startTime);
+                noise.stop(startTime + 0.2);
+            }
+        }
+    }
+
+    createChillStrings(audioContext, beatDuration, totalDuration) {
+        const pad = [392.00, 493.88, 587.33, 698.46]; // G-B-D-F
+        const startTime = audioContext.currentTime;
+        
+        pad.forEach((freq, noteIndex) => {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain).connect(audioContext.destination);
+            
+            osc.frequency.setValueAtTime(freq, startTime);
+            osc.type = 'sawtooth';
+            
+            gain.gain.setValueAtTime(0, startTime);
+            gain.gain.linearRampToValueAtTime(0.03 - noteIndex * 0.005, startTime + 3);
+            gain.gain.linearRampToValueAtTime(0.02 - noteIndex * 0.005, startTime + totalDuration - 3);
+            gain.gain.linearRampToValueAtTime(0, startTime + totalDuration);
+            
+            osc.start(startTime);
+            osc.stop(startTime + totalDuration);
+        });
+    }
+
+    // Additional style section generators
+    generateEmotionalSection(audioContext, tempo) {
+        return () => {
+            const beatDuration = 60 / tempo;
+            const totalDuration = 30;
+            
+            // Emotional: Strings + Soft piano + Light percussion
+            this.createEmotionalStrings(audioContext, beatDuration, totalDuration);
+            this.createEmotionalPiano(audioContext, beatDuration, totalDuration);
+            this.createEmotionalPercussion(audioContext, beatDuration, totalDuration);
+        };
+    }
+
+    generateEnergeticSection(audioContext, tempo) {
+        return () => {
+            const beatDuration = 60 / tempo;
+            const totalDuration = 30;
+            
+            // Energetic: Driving guitar + Strong percussion + Bass
+            this.createEnergeticGuitar(audioContext, beatDuration, totalDuration);
+            this.createEnergeticPercussion(audioContext, beatDuration, totalDuration);
+            this.createEnergeticBass(audioContext, beatDuration, totalDuration);
+        };
+    }
+
+    generateRomanticSection(audioContext, tempo) {
+        return () => {
+            const beatDuration = 60 / tempo;
+            const totalDuration = 30;
+            
+            // Romantic: Soft strings + Gentle piano + Subtle percussion
+            this.createRomanticStrings(audioContext, beatDuration, totalDuration);
+            this.createRomanticPiano(audioContext, beatDuration, totalDuration);
+            this.createRomanticPercussion(audioContext, beatDuration, totalDuration);
+        };
+    }
+
+    generateSingerSongwriterSection(audioContext, tempo) {
+        return () => {
+            const beatDuration = 60 / tempo;
+            const totalDuration = 30;
+            
+            // Singer-songwriter: Fingerpicked guitar + Soft strings + Minimal percussion
+            this.createSingerSongwriterGuitar(audioContext, beatDuration, totalDuration);
+            this.createSingerSongwriterStrings(audioContext, beatDuration, totalDuration);
+            this.createSingerSongwriterPercussion(audioContext, beatDuration, totalDuration);
+        };
+    }
+
+    generateFolkPopSection(audioContext, tempo) {
+        return () => {
+            const beatDuration = 60 / tempo;
+            const totalDuration = 30;
+            
+            // Folk-pop: Acoustic guitar + Light strings + Organic percussion
+            this.createFolkPopGuitar(audioContext, beatDuration, totalDuration);
+            this.createFolkPopStrings(audioContext, beatDuration, totalDuration);
+            this.createFolkPopPercussion(audioContext, beatDuration, totalDuration);
+        };
+    }
+
+    generateNeoSoulSection(audioContext, tempo) {
+        return () => {
+            const beatDuration = 60 / tempo;
+            const totalDuration = 30;
+            
+            // Neo-soul: Electric piano + Smooth bass + Groove percussion
+            this.createNeoSoulPiano(audioContext, beatDuration, totalDuration);
+            this.createNeoSoulBass(audioContext, beatDuration, totalDuration);
+            this.createNeoSoulPercussion(audioContext, beatDuration, totalDuration);
+        };
+    }
+
+    // Emotional style components
+    createEmotionalStrings(audioContext, beatDuration, totalDuration) {
+        const emotionalChords = [
+            [220.00, 277.18, 329.63, 415.30], // Am7
+            [196.00, 246.94, 293.66, 369.99], // Gm7
+            [261.63, 329.63, 392.00, 493.88], // Cmaj7
+            [174.61, 220.00, 261.63, 329.63]  // Fm7
+        ];
+        
+        const chordDuration = beatDuration * 8;
+        const totalChords = Math.floor(totalDuration / chordDuration);
+        
+        for (let c = 0; c < totalChords; c++) {
+            const chord = emotionalChords[c % 4];
+            const startTime = audioContext.currentTime + c * chordDuration;
+            
+            chord.forEach((freq, noteIndex) => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain).connect(audioContext.destination);
+                
+                osc.frequency.setValueAtTime(freq, startTime);
+                osc.type = 'sawtooth';
+                
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.06 - noteIndex * 0.01, startTime + 2);
+                gain.gain.linearRampToValueAtTime(0.04 - noteIndex * 0.01, startTime + chordDuration - 2);
+                gain.gain.linearRampToValueAtTime(0, startTime + chordDuration);
+                
+                osc.start(startTime);
+                osc.stop(startTime + chordDuration);
+            });
+        }
+    }
+
+    createEmotionalPiano(audioContext, beatDuration, totalDuration) {
+        const melodyNotes = [329.63, 369.99, 415.30, 466.16, 523.25]; // E-F#-G#-A#-C
+        const noteDuration = beatDuration * 2;
+        const totalNotes = Math.floor(totalDuration / noteDuration);
+        
+        for (let n = 0; n < totalNotes; n++) {
+            if (Math.random() > 0.4) { // 60% chance to play note
+                const freq = melodyNotes[Math.floor(Math.random() * melodyNotes.length)];
+                const startTime = audioContext.currentTime + n * noteDuration;
+                
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain).connect(audioContext.destination);
+                
+                osc.frequency.setValueAtTime(freq, startTime);
+                osc.type = 'triangle';
+                
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.08, startTime + 0.2);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + noteDuration);
+                
+                osc.start(startTime);
+                osc.stop(startTime + noteDuration);
+            }
+        }
+    }
+
+    createEmotionalPercussion(audioContext, beatDuration, totalDuration) {
+        const beats = Math.floor(totalDuration / beatDuration);
+        
+        for (let beat = 0; beat < beats; beat++) {
+            const startTime = audioContext.currentTime + beat * beatDuration;
+            
+            // Soft tambourine every 4 beats
+            if (beat % 4 === 0 && Math.random() > 0.3) {
+                const noise = audioContext.createBufferSource();
+                const buffer = audioContext.createBuffer(1, 256, audioContext.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < 256; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                noise.buffer = buffer;
+                
+                const gain = audioContext.createGain();
+                noise.connect(gain).connect(audioContext.destination);
+                
+                gain.gain.setValueAtTime(0.05, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+                
+                noise.start(startTime);
+                noise.stop(startTime + 0.3);
+            }
+        }
+    }
+
+    // Energetic style components
+    createEnergeticGuitar(audioContext, beatDuration, totalDuration) {
+        const powerChords = [
+            [82.41, 164.81], // E power chord
+            [110.00, 220.00], // A power chord
+            [146.83, 293.66], // D power chord
+            [98.00, 196.00]   // G power chord
+        ];
+        
+        const chordDuration = beatDuration * 2;
+        const totalChords = Math.floor(totalDuration / chordDuration);
+        
+        for (let c = 0; c < totalChords; c++) {
+            const chord = powerChords[c % 4];
+            const startTime = audioContext.currentTime + c * chordDuration;
+            
+            chord.forEach((freq, noteIndex) => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain).connect(audioContext.destination);
+                
+                osc.frequency.setValueAtTime(freq, startTime);
+                osc.type = 'sawtooth';
+                
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.2 - noteIndex * 0.05, startTime + 0.1);
+                gain.gain.linearRampToValueAtTime(0.15 - noteIndex * 0.05, startTime + chordDuration - 0.1);
+                gain.gain.linearRampToValueAtTime(0, startTime + chordDuration);
+                
+                osc.start(startTime);
+                osc.stop(startTime + chordDuration);
+            });
+        }
+    }
+
+    createEnergeticPercussion(audioContext, beatDuration, totalDuration) {
+        const beats = Math.floor(totalDuration / beatDuration);
+        
+        for (let beat = 0; beat < beats; beat++) {
+            const startTime = audioContext.currentTime + beat * beatDuration;
+            
+            // Strong kick on 1 and 3
+            if (beat % 4 === 0 || beat % 4 === 2) {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain).connect(audioContext.destination);
+                
+                osc.frequency.setValueAtTime(60, startTime);
+                osc.type = 'triangle';
+                gain.gain.setValueAtTime(0.3, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.2);
+                
+                osc.start(startTime);
+                osc.stop(startTime + 0.2);
+            }
+            
+            // Snare on 2 and 4
+            if (beat % 4 === 1 || beat % 4 === 3) {
+                const noise = audioContext.createBufferSource();
+                const buffer = audioContext.createBuffer(1, 2048, audioContext.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < 2048; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                noise.buffer = buffer;
+                
+                const gain = audioContext.createGain();
+                noise.connect(gain).connect(audioContext.destination);
+                
+                gain.gain.setValueAtTime(0.15, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.1);
+                
+                noise.start(startTime);
+                noise.stop(startTime + 0.1);
+            }
+        }
+    }
+
+    createEnergeticBass(audioContext, beatDuration, totalDuration) {
+        const bassNotes = [82.41, 110.00, 146.83, 98.00]; // E-A-D-G
+        const noteDuration = beatDuration;
+        const totalNotes = Math.floor(totalDuration / noteDuration);
+        
+        for (let n = 0; n < totalNotes; n++) {
+            const freq = bassNotes[n % 4];
+            const startTime = audioContext.currentTime + n * noteDuration;
+            
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain).connect(audioContext.destination);
+            
+            osc.frequency.setValueAtTime(freq, startTime);
+            osc.type = 'triangle';
+            
+            gain.gain.setValueAtTime(0, startTime);
+            gain.gain.linearRampToValueAtTime(0.18, startTime + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.01, startTime + noteDuration * 0.8);
+            
+            osc.start(startTime);
+            osc.stop(startTime + noteDuration);
+        }
+    }
+
+    // Romantic style components
+    createRomanticStrings(audioContext, beatDuration, totalDuration) {
+        const romanticPad = [261.63, 329.63, 392.00, 493.88, 587.33]; // C-E-G-B-D
+        const startTime = audioContext.currentTime;
+        
+        romanticPad.forEach((freq, noteIndex) => {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain).connect(audioContext.destination);
+            
+            osc.frequency.setValueAtTime(freq, startTime);
+            osc.type = 'sawtooth';
+            
+            gain.gain.setValueAtTime(0, startTime);
+            gain.gain.linearRampToValueAtTime(0.04 - noteIndex * 0.005, startTime + 4);
+            gain.gain.linearRampToValueAtTime(0.03 - noteIndex * 0.005, startTime + totalDuration - 4);
+            gain.gain.linearRampToValueAtTime(0, startTime + totalDuration);
+            
+            osc.start(startTime);
+            osc.stop(startTime + totalDuration);
+        });
+    }
+
+    createRomanticPiano(audioContext, beatDuration, totalDuration) {
+        const romanticChords = [
+            [261.63, 329.63, 392.00], // C major
+            [220.00, 277.18, 329.63], // A minor
+            [196.00, 246.94, 293.66], // G major
+            [174.61, 220.00, 261.63]  // F major
+        ];
+        
+        const chordDuration = beatDuration * 6;
+        const totalChords = Math.floor(totalDuration / chordDuration);
+        
+        for (let c = 0; c < totalChords; c++) {
+            const chord = romanticChords[c % 4];
+            const startTime = audioContext.currentTime + c * chordDuration;
+            
+            chord.forEach((freq, noteIndex) => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain).connect(audioContext.destination);
+                
+                osc.frequency.setValueAtTime(freq, startTime);
+                osc.type = 'triangle';
+                
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.06 - noteIndex * 0.01, startTime + 1);
+                gain.gain.linearRampToValueAtTime(0.04 - noteIndex * 0.01, startTime + chordDuration - 1);
+                gain.gain.linearRampToValueAtTime(0, startTime + chordDuration);
+                
+                osc.start(startTime);
+                osc.stop(startTime + chordDuration);
+            });
+        }
+    }
+
+    createRomanticPercussion(audioContext, beatDuration, totalDuration) {
+        const beats = Math.floor(totalDuration / beatDuration);
+        
+        for (let beat = 0; beat < beats; beat++) {
+            const startTime = audioContext.currentTime + beat * beatDuration;
+            
+            // Very soft shaker every 8 beats
+            if (beat % 8 === 0 && Math.random() > 0.5) {
+                const noise = audioContext.createBufferSource();
+                const buffer = audioContext.createBuffer(1, 128, audioContext.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < 128; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                noise.buffer = buffer;
+                
+                const gain = audioContext.createGain();
+                noise.connect(gain).connect(audioContext.destination);
+                
+                gain.gain.setValueAtTime(0.02, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.4);
+                
+                noise.start(startTime);
+                noise.stop(startTime + 0.4);
+            }
+        }
+    }
+
+    // Singer-songwriter style components
+    createSingerSongwriterGuitar(audioContext, beatDuration, totalDuration) {
+        const fingerpickingPattern = [
+            [196.00, 246.94, 293.66], // G chord fingerpicking
+            [261.63, 329.63, 392.00], // C chord fingerpicking
+            [220.00, 277.18, 329.63], // Am chord fingerpicking
+            [174.61, 220.00, 261.63]  // F chord fingerpicking
+        ];
+        
+        const patternDuration = beatDuration * 4;
+        const totalPatterns = Math.floor(totalDuration / patternDuration);
+        
+        for (let p = 0; p < totalPatterns; p++) {
+            const pattern = fingerpickingPattern[p % 4];
+            const patternStart = audioContext.currentTime + p * patternDuration;
+            
+            pattern.forEach((freq, noteIndex) => {
+                const noteTime = patternStart + noteIndex * beatDuration;
+                
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain).connect(audioContext.destination);
+                
+                osc.frequency.setValueAtTime(freq, noteTime);
+                osc.type = 'sawtooth';
+                
+                gain.gain.setValueAtTime(0, noteTime);
+                gain.gain.linearRampToValueAtTime(0.12, noteTime + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.01, noteTime + beatDuration * 1.2);
+                
+                osc.start(noteTime);
+                osc.stop(noteTime + beatDuration * 1.5);
+            });
+        }
+    }
+
+    createSingerSongwriterStrings(audioContext, beatDuration, totalDuration) {
+        const subtleStrings = [392.00, 493.88, 587.33]; // G-B-D
+        const startTime = audioContext.currentTime;
+        
+        subtleStrings.forEach((freq, noteIndex) => {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain).connect(audioContext.destination);
+            
+            osc.frequency.setValueAtTime(freq, startTime);
+            osc.type = 'sawtooth';
+            
+            gain.gain.setValueAtTime(0, startTime);
+            gain.gain.linearRampToValueAtTime(0.025 - noteIndex * 0.003, startTime + 5);
+            gain.gain.linearRampToValueAtTime(0.02 - noteIndex * 0.003, startTime + totalDuration - 5);
+            gain.gain.linearRampToValueAtTime(0, startTime + totalDuration);
+            
+            osc.start(startTime);
+            osc.stop(startTime + totalDuration);
+        });
+    }
+
+    createSingerSongwriterPercussion(audioContext, beatDuration, totalDuration) {
+        const beats = Math.floor(totalDuration / beatDuration);
+        
+        for (let beat = 0; beat < beats; beat++) {
+            const startTime = audioContext.currentTime + beat * beatDuration;
+            
+            // Minimal finger taps every 16 beats
+            if (beat % 16 === 0 && Math.random() > 0.6) {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain).connect(audioContext.destination);
+                
+                osc.frequency.setValueAtTime(800, startTime);
+                osc.type = 'triangle';
+                gain.gain.setValueAtTime(0.03, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.05);
+                
+                osc.start(startTime);
+                osc.stop(startTime + 0.05);
+            }
+        }
+    }
+
+    // Folk-pop style components
+    createFolkPopGuitar(audioContext, beatDuration, totalDuration) {
+        const folkChords = [
+            [82.41, 110.00, 146.83, 196.00, 246.94], // Em full
+            [110.00, 146.83, 196.00, 246.94, 293.66], // Am full
+            [98.00, 130.81, 164.81, 196.00, 246.94], // G full
+            [87.31, 116.54, 146.83, 174.61, 220.00]  // D full
+        ];
+        
+        const strumDuration = beatDuration * 2;
+        const totalStrums = Math.floor(totalDuration / strumDuration);
+        
+        for (let s = 0; s < totalStrums; s++) {
+            const chord = folkChords[s % 4];
+            const strumTime = audioContext.currentTime + s * strumDuration;
+            
+            chord.forEach((freq, stringIndex) => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain).connect(audioContext.destination);
+                
+                osc.frequency.setValueAtTime(freq, strumTime + stringIndex * 0.008);
+                osc.type = 'sawtooth';
+                
+                gain.gain.setValueAtTime(0, strumTime);
+                gain.gain.linearRampToValueAtTime(0.1 - stringIndex * 0.015, strumTime + 0.08);
+                gain.gain.exponentialRampToValueAtTime(0.01, strumTime + strumDuration * 0.9);
+                
+                osc.start(strumTime);
+                osc.stop(strumTime + strumDuration);
+            });
+        }
+    }
+
+    createFolkPopStrings(audioContext, beatDuration, totalDuration) {
+        const folkStrings = [293.66, 369.99, 440.00, 523.25]; // D-F#-A-C
+        const phraseDuration = beatDuration * 12;
+        const phrases = Math.floor(totalDuration / phraseDuration);
+        
+        for (let p = 0; p < phrases; p++) {
+            const startTime = audioContext.currentTime + p * phraseDuration;
+            
+            folkStrings.forEach((freq, noteIndex) => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain).connect(audioContext.destination);
+                
+                osc.frequency.setValueAtTime(freq, startTime);
+                osc.type = 'sawtooth';
+                
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.05 - noteIndex * 0.008, startTime + 3);
+                gain.gain.linearRampToValueAtTime(0.03 - noteIndex * 0.008, startTime + phraseDuration - 3);
+                gain.gain.linearRampToValueAtTime(0, startTime + phraseDuration);
+                
+                osc.start(startTime);
+                osc.stop(startTime + phraseDuration);
+            });
+        }
+    }
+
+    createFolkPopPercussion(audioContext, beatDuration, totalDuration) {
+        const beats = Math.floor(totalDuration / beatDuration);
+        
+        for (let beat = 0; beat < beats; beat++) {
+            const startTime = audioContext.currentTime + beat * beatDuration;
+            
+            // Light tambourine every 4 beats
+            if (beat % 4 === 0 && Math.random() > 0.4) {
+                const noise = audioContext.createBufferSource();
+                const buffer = audioContext.createBuffer(1, 512, audioContext.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < 512; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                noise.buffer = buffer;
+                
+                const gain = audioContext.createGain();
+                noise.connect(gain).connect(audioContext.destination);
+                
+                gain.gain.setValueAtTime(0.06, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.2);
+                
+                noise.start(startTime);
+                noise.stop(startTime + 0.2);
+            }
+        }
+    }
+
+    // Neo-soul style components
+    createNeoSoulPiano(audioContext, beatDuration, totalDuration) {
+        const soulChords = [
+            [174.61, 220.00, 277.18, 329.63], // Fm7
+            [196.00, 246.94, 311.13, 369.99], // Gm7
+            [220.00, 277.18, 349.23, 415.30], // Am7
+            [146.83, 185.00, 233.08, 277.18]  // Dm7
+        ];
+        
+        const chordDuration = beatDuration * 4;
+        const totalChords = Math.floor(totalDuration / chordDuration);
+        
+        for (let c = 0; c < totalChords; c++) {
+            const chord = soulChords[c % 4];
+            const startTime = audioContext.currentTime + c * chordDuration;
+            
+            chord.forEach((freq, noteIndex) => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain).connect(audioContext.destination);
+                
+                osc.frequency.setValueAtTime(freq, startTime);
+                osc.type = 'sine';
+                
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.09 - noteIndex * 0.015, startTime + 0.4);
+                gain.gain.linearRampToValueAtTime(0.06 - noteIndex * 0.015, startTime + chordDuration - 0.4);
+                gain.gain.linearRampToValueAtTime(0, startTime + chordDuration);
+                
+                osc.start(startTime);
+                osc.stop(startTime + chordDuration);
+            });
+        }
+    }
+
+    createNeoSoulBass(audioContext, beatDuration, totalDuration) {
+        const bassLine = [87.31, 98.00, 110.00, 73.42]; // D-G-A-D
+        const noteDuration = beatDuration * 2;
+        const totalNotes = Math.floor(totalDuration / noteDuration);
+        
+        for (let n = 0; n < totalNotes; n++) {
+            const freq = bassLine[n % 4];
+            const startTime = audioContext.currentTime + n * noteDuration;
+            
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain).connect(audioContext.destination);
+            
+            osc.frequency.setValueAtTime(freq, startTime);
+            osc.type = 'triangle';
+            
+            gain.gain.setValueAtTime(0, startTime);
+            gain.gain.linearRampToValueAtTime(0.16, startTime + 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.01, startTime + noteDuration * 0.9);
+            
+            osc.start(startTime);
+            osc.stop(startTime + noteDuration);
+        }
+    }
+
+    createNeoSoulPercussion(audioContext, beatDuration, totalDuration) {
+        const beats = Math.floor(totalDuration / beatDuration);
+        
+        for (let beat = 0; beat < beats; beat++) {
+            const startTime = audioContext.currentTime + beat * beatDuration;
+            
+            // Groove kick pattern
+            if (beat % 8 === 0 || beat % 8 === 3 || beat % 8 === 6) {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain).connect(audioContext.destination);
+                
+                osc.frequency.setValueAtTime(65, startTime);
+                osc.type = 'triangle';
+                gain.gain.setValueAtTime(0.25, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+                
+                osc.start(startTime);
+                osc.stop(startTime + 0.3);
+            }
+            
+            // Hi-hat pattern
+            if (beat % 2 === 1 && Math.random() > 0.3) {
+                const noise = audioContext.createBufferSource();
+                const buffer = audioContext.createBuffer(1, 256, audioContext.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < 256; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                noise.buffer = buffer;
+                
+                const gain = audioContext.createGain();
+                noise.connect(gain).connect(audioContext.destination);
+                
+                gain.gain.setValueAtTime(0.08, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.08);
+                
+                noise.start(startTime);
+                noise.stop(startTime + 0.08);
+            }
+        }
     }
 }
 

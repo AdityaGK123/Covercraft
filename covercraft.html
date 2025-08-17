@@ -6,7 +6,10 @@
     <title>CoverCraft - AI Cover Creation</title>
     <meta name="description" content="Create professional music covers with AI-powered backing tracks">
     <link rel="manifest" href="manifest.json">
+    <!-- Styles -->
     <link rel="stylesheet" href="covercraft-styles.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/social-editor.css">
     <meta name="theme-color" content="#6366f1">
     <link rel="apple-touch-icon" href="icon-192.png">
 </head>
@@ -16,6 +19,8 @@
     <script src="js/audio-engine.js"></script>
     <script src="js/backing-track-generator.js"></script>
     <script src="js/ai-engine.js"></script>
+    <script src="js/social-integration.js"></script>
+    <script src="js/cover-editor.js"></script>
     <script src="js/covercraft-app.js"></script>
     
     <!-- Register Service Worker -->
@@ -483,19 +488,15 @@
                 </div>
 
                 <div class="social-share">
-                    <h3>Share Directly</h3>
+                    <h3>Share & Edit</h3>
                     <div class="share-buttons">
-                        <button class="share-btn instagram" data-platform="instagram">
-                            <span class="share-icon">📷</span>
-                            Instagram
+                        <button id="edit-cover" class="primary-btn">
+                            <span class="share-icon">✨</span>
+                            Edit Cover
                         </button>
-                        <button class="share-btn whatsapp" data-platform="whatsapp">
-                            <span class="share-icon">💬</span>
-                            WhatsApp
-                        </button>
-                        <button class="share-btn facebook" data-platform="facebook">
-                            <span class="share-icon">📘</span>
-                            Facebook
+                        <button id="quick-share" class="secondary-btn">
+                            <span class="share-icon">🚀</span>
+                            Quick Share
                         </button>
                     </div>
                 </div>
