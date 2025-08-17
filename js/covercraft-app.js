@@ -154,24 +154,45 @@ class CoverCraftApp {
     }
 
     setupStyleSelection() {
+        // Mood selection
         document.querySelectorAll('.mood-option').forEach(option => {
             option.addEventListener('click', (e) => {
-                document.querySelectorAll('.mood-option').forEach(o => o.classList.remove('selected'));
-                e.currentTarget.classList.add('selected');
+                if (e.target.classList.contains('preview-btn')) {
+                    e.stopPropagation();
+                    this.playStylePreview(e.target.getAttribute('data-style'));
+                    return;
+                }
+                document.querySelectorAll('.mood-option').forEach(opt => opt.classList.remove('active'));
+                e.currentTarget.classList.add('active');
                 this.selectedMood = e.currentTarget.getAttribute('data-mood');
                 this.updateGenerateButton();
             });
         });
 
+        // Genre selection
         document.querySelectorAll('.genre-option').forEach(option => {
             option.addEventListener('click', (e) => {
-                document.querySelectorAll('.genre-option').forEach(o => o.classList.remove('selected'));
-                e.currentTarget.classList.add('selected');
+                if (e.target.classList.contains('preview-btn')) {
+                    e.stopPropagation();
+                    this.playStylePreview(e.target.getAttribute('data-style'));
+                    return;
+                }
+                document.querySelectorAll('.genre-option').forEach(opt => opt.classList.remove('active'));
+                e.currentTarget.classList.add('active');
                 this.selectedGenre = e.currentTarget.getAttribute('data-genre');
                 this.updateGenerateButton();
             });
         });
 
+        // Preview buttons
+        document.querySelectorAll('.preview-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.playStylePreview(e.target.getAttribute('data-style'));
+            });
+        });
+
+        // Generate button
         const generateBtn = document.getElementById('generate-backing-track');
         if (generateBtn) {
             generateBtn.addEventListener('click', () => this.generateBackingTrack());
@@ -392,17 +413,23 @@ class CoverCraftApp {
     }
 
     processYouTubeUrl(url) {
-        this.showMessage('Processing YouTube video...', 'info');
-        
-        setTimeout(() => {
-            this.currentSong = {
-                title: 'Sample Song',
-                artist: 'Sample Artist',
-                duration: '3:45',
-                audioUrl: '#'
-            };
-            this.showSongPreview();
-        }, 2000);
+        // Simulate YouTube processing
+        const videoId = this.extractYouTubeVideoId(url);
+        if (!videoId) {
+            this.showError('Invalid YouTube URL. Please check and try again.');
+            return;
+        }
+
+        // Mock song data - in real app, this would come from YouTube API
+        const songData = {
+            title: 'Sample Song Title',
+            artist: 'Sample Artist',
+            duration: '3:45',
+            videoId: videoId,
+            isYouTube: true
+        };
+
+        this.displaySongPreview(songData);
     }
 
     processAudioFile(file) {
@@ -421,15 +448,37 @@ class CoverCraftApp {
         reader.readAsDataURL(file);
     }
 
-    showSongPreview() {
-        const preview = document.getElementById('song-preview');
-        if (preview && this.currentSong) {
-            document.getElementById('song-title').textContent = this.currentSong.title;
-            document.getElementById('song-artist').textContent = this.currentSong.artist;
-            document.getElementById('song-duration').textContent = `Duration: ${this.currentSong.duration}`;
-            document.getElementById('song-audio').src = this.currentSong.audioUrl;
-            preview.style.display = 'block';
+    displaySongPreview(songData) {
+        document.getElementById('song-title').textContent = songData.title;
+        document.getElementById('song-artist').textContent = songData.artist;
+        document.getElementById('song-duration').textContent = `Duration: ${songData.duration}`;
+        
+        // Parse duration and check if > 5 minutes
+        const durationParts = songData.duration.split(':');
+        const totalMinutes = parseInt(durationParts[0]) + (parseInt(durationParts[1]) / 60);
+        
+        if (totalMinutes > 5) {
+            document.getElementById('song-length-warning').style.display = 'block';
+        } else {
+            document.getElementById('song-length-warning').style.display = 'none';
         }
+        
+        // Show YouTube preview or audio controls
+        if (songData.isYouTube && songData.videoId) {
+            const youtubePreview = document.getElementById('youtube-preview');
+            const iframe = document.getElementById('youtube-iframe');
+            iframe.src = `https://www.youtube.com/embed/${songData.videoId}?start=30&autoplay=0`;
+            youtubePreview.style.display = 'block';
+            document.getElementById('song-audio').style.display = 'none';
+        } else if (songData.audioUrl) {
+            const audioElement = document.getElementById('song-audio');
+            audioElement.src = songData.audioUrl;
+            audioElement.style.display = 'block';
+            document.getElementById('youtube-preview').style.display = 'none';
+        }
+        
+        document.getElementById('song-preview').style.display = 'block';
+        this.currentSong = songData;
     }
 
     updateGenerateButton() {
@@ -495,7 +544,135 @@ class CoverCraftApp {
     }
 
     previewBackingTrack() {
-        this.showMessage('Playing preview...', 'success');
+        // Generate preview based on current settings
+        this.showMessage('Generating preview...', 'info');
+        
+        // Get current track settings
+        const enabledTracks = [];
+        document.querySelectorAll('.track-toggle:checked').forEach(toggle => {
+            enabledTracks.push(toggle.getAttribute('data-track'));
+        });
+        
+        const tempo = document.getElementById('tempo-slider').value;
+        
+        // Generate backing track preview using Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        this.generateBackingTrackPreview(audioContext, enabledTracks, tempo);
+        
+        this.showMessage('Preview ready! Playing...', 'success');
+    }
+
+    generateBackingTrackPreview(audioContext, enabledTracks, tempo) {
+        const baseTempo = 120; // BPM
+        const adjustedTempo = (baseTempo * tempo) / 100;
+        const beatDuration = 60 / adjustedTempo;
+        
+        // Generate different instrument tracks
+        if (enabledTracks.includes('drums')) {
+            this.generateDrumTrack(audioContext, beatDuration);
+        }
+        
+        if (enabledTracks.includes('melody')) {
+            this.generateMelodyTrack(audioContext, beatDuration);
+        }
+        
+        if (enabledTracks.includes('strings')) {
+            this.generateStringsTrack(audioContext, beatDuration);
+        }
+        
+        if (enabledTracks.includes('bass')) {
+            this.generateBassTrack(audioContext, beatDuration);
+        }
+    }
+
+    generateDrumTrack(audioContext, beatDuration) {
+        // Kick drum pattern
+        for (let i = 0; i < 8; i++) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(60, audioContext.currentTime);
+            oscillator.type = 'triangle';
+            
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime + i * beatDuration);
+            gainNode.gain.linearRampToValueAtTime(0.4, audioContext.currentTime + i * beatDuration + 0.01);
+            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + i * beatDuration + 0.1);
+            
+            oscillator.start(audioContext.currentTime + i * beatDuration);
+            oscillator.stop(audioContext.currentTime + i * beatDuration + 0.2);
+        }
+    }
+
+    generateMelodyTrack(audioContext, beatDuration) {
+        // Piano melody
+        const melodyNotes = [261.63, 293.66, 329.63, 392.00]; // C, D, E, G
+        
+        for (let i = 0; i < 8; i++) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(melodyNotes[i % 4], audioContext.currentTime);
+            oscillator.type = 'triangle';
+            
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime + i * beatDuration);
+            gainNode.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + i * beatDuration + 0.1);
+            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + i * beatDuration + beatDuration * 0.8);
+            
+            oscillator.start(audioContext.currentTime + i * beatDuration);
+            oscillator.stop(audioContext.currentTime + i * beatDuration + beatDuration);
+        }
+    }
+
+    generateStringsTrack(audioContext, beatDuration) {
+        // String pad
+        const stringNotes = [196.00, 246.94, 293.66]; // G, B, D
+        
+        for (let i = 0; i < 4; i++) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(stringNotes[i % 3], audioContext.currentTime);
+            oscillator.type = 'sawtooth';
+            
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime + i * beatDuration * 2);
+            gainNode.gain.linearRampToValueAtTime(0.08, audioContext.currentTime + i * beatDuration * 2 + 0.3);
+            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + i * beatDuration * 2 + beatDuration * 1.8);
+            
+            oscillator.start(audioContext.currentTime + i * beatDuration * 2);
+            oscillator.stop(audioContext.currentTime + i * beatDuration * 2 + beatDuration * 2);
+        }
+    }
+
+    generateBassTrack(audioContext, beatDuration) {
+        // Bass line
+        const bassNotes = [82.41, 98.00, 110.00]; // E, G, A
+        
+        for (let i = 0; i < 8; i++) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(bassNotes[i % 3], audioContext.currentTime);
+            oscillator.type = 'square';
+            
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime + i * beatDuration);
+            gainNode.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + i * beatDuration + 0.05);
+            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + i * beatDuration + beatDuration * 0.6);
+            
+            oscillator.start(audioContext.currentTime + i * beatDuration);
+            oscillator.stop(audioContext.currentTime + i * beatDuration + beatDuration * 0.8);
+        }
     }
 
     setRecordingMode(mode) {
@@ -823,6 +1000,225 @@ class CoverCraftApp {
             oscillator.start(audioContext.currentTime + index * 0.5);
             oscillator.stop(audioContext.currentTime + index * 0.5 + 0.5);
         });
+    }
+
+    playStylePreview(style) {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Style-specific instrument patterns (20-second previews)
+        const stylePatterns = {
+            'chill': this.generateChillPattern(audioContext),
+            'emotional': this.generateEmotionalPattern(audioContext),
+            'energetic': this.generateEnergeticPattern(audioContext),
+            'romantic': this.generateRomanticPattern(audioContext),
+            'indian-indie': this.generateIndianIndiePattern(audioContext),
+            'bollywood': this.generateBollywoodPattern(audioContext),
+            'indian-classical': this.generateClassicalPattern(audioContext),
+            'western-pop': this.generateWesternPopPattern(audioContext)
+        };
+
+        const pattern = stylePatterns[style] || stylePatterns['chill'];
+        pattern();
+    }
+
+    generateChillPattern(audioContext) {
+        return () => {
+            // Piano-based chill pattern
+            const pianoNotes = [261.63, 329.63, 392.00, 523.25]; // C, E, G, C
+            
+            for (let i = 0; i < 8; i++) {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(pianoNotes[i % 4], audioContext.currentTime);
+                oscillator.type = 'triangle';
+                
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime + i * 2.5);
+                gainNode.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + i * 2.5 + 0.1);
+                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + i * 2.5 + 2);
+                
+                oscillator.start(audioContext.currentTime + i * 2.5);
+                oscillator.stop(audioContext.currentTime + i * 2.5 + 2.5);
+            }
+        };
+    }
+
+    generateEmotionalPattern(audioContext) {
+        return () => {
+            // String-based emotional pattern
+            const stringNotes = [220.00, 246.94, 293.66, 329.63]; // A, B, D, E
+            
+            for (let i = 0; i < 6; i++) {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(stringNotes[i % 4], audioContext.currentTime);
+                oscillator.type = 'sawtooth';
+                
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime + i * 3);
+                gainNode.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + i * 3 + 0.5);
+                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + i * 3 + 2.5);
+                
+                oscillator.start(audioContext.currentTime + i * 3);
+                oscillator.stop(audioContext.currentTime + i * 3 + 3);
+            }
+        };
+    }
+
+    generateEnergeticPattern(audioContext) {
+        return () => {
+            // Drum and bass pattern
+            const bassNotes = [82.41, 110.00, 146.83]; // E, A, D
+            
+            for (let i = 0; i < 10; i++) {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(bassNotes[i % 3], audioContext.currentTime);
+                oscillator.type = 'square';
+                
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime + i * 2);
+                gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + i * 2 + 0.05);
+                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + i * 2 + 0.5);
+                
+                oscillator.start(audioContext.currentTime + i * 2);
+                oscillator.stop(audioContext.currentTime + i * 2 + 1);
+            }
+        };
+    }
+
+    generateRomanticPattern(audioContext) {
+        return () => {
+            // Soft piano and strings
+            const romanticNotes = [261.63, 293.66, 329.63, 392.00, 440.00];
+            
+            for (let i = 0; i < 8; i++) {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(romanticNotes[i % 5], audioContext.currentTime);
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime + i * 2.5);
+                gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + i * 2.5 + 0.3);
+                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + i * 2.5 + 2);
+                
+                oscillator.start(audioContext.currentTime + i * 2.5);
+                oscillator.stop(audioContext.currentTime + i * 2.5 + 2.5);
+            }
+        };
+    }
+
+    generateIndianIndiePattern(audioContext) {
+        return () => {
+            // Guitar with tabla rhythm
+            const indieNotes = [196.00, 220.00, 246.94, 293.66]; // G, A, B, D
+            
+            for (let i = 0; i < 8; i++) {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(indieNotes[i % 4], audioContext.currentTime);
+                oscillator.type = 'triangle';
+                
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime + i * 2.5);
+                gainNode.gain.linearRampToValueAtTime(0.25, audioContext.currentTime + i * 2.5 + 0.1);
+                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + i * 2.5 + 1.5);
+                
+                oscillator.start(audioContext.currentTime + i * 2.5);
+                oscillator.stop(audioContext.currentTime + i * 2.5 + 2);
+            }
+        };
+    }
+
+    generateBollywoodPattern(audioContext) {
+        return () => {
+            // Classic Bollywood orchestration
+            const bollywoodNotes = [261.63, 329.63, 392.00, 523.25, 659.25];
+            
+            for (let i = 0; i < 8; i++) {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(bollywoodNotes[i % 5], audioContext.currentTime);
+                oscillator.type = 'sawtooth';
+                
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime + i * 2.5);
+                gainNode.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + i * 2.5 + 0.2);
+                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + i * 2.5 + 2);
+                
+                oscillator.start(audioContext.currentTime + i * 2.5);
+                oscillator.stop(audioContext.currentTime + i * 2.5 + 2.5);
+            }
+        };
+    }
+
+    generateClassicalPattern(audioContext) {
+        return () => {
+            // Sitar-like pattern
+            const classicalNotes = [146.83, 164.81, 196.00, 220.00, 246.94];
+            
+            for (let i = 0; i < 10; i++) {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(classicalNotes[i % 5], audioContext.currentTime);
+                oscillator.type = 'sawtooth';
+                
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime + i * 2);
+                gainNode.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + i * 2 + 0.3);
+                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + i * 2 + 1.5);
+                
+                oscillator.start(audioContext.currentTime + i * 2);
+                oscillator.stop(audioContext.currentTime + i * 2 + 2);
+            }
+        };
+    }
+
+    generateWesternPopPattern(audioContext) {
+        return () => {
+            // Standard pop progression
+            const popNotes = [261.63, 329.63, 392.00, 440.00];
+            
+            for (let i = 0; i < 8; i++) {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(popNotes[i % 4], audioContext.currentTime);
+                oscillator.type = 'square';
+                
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime + i * 2.5);
+                gainNode.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + i * 2.5 + 0.1);
+                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + i * 2.5 + 2);
+                
+                oscillator.start(audioContext.currentTime + i * 2.5);
+                oscillator.stop(audioContext.currentTime + i * 2.5 + 2.5);
+            }
+        };
     }
 }
 

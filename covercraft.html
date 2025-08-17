@@ -151,8 +151,15 @@
                             <h4 id="song-title">Song Title</h4>
                             <p id="song-artist">Artist</p>
                             <p id="song-duration">Duration: 0:00</p>
+                            <p id="song-length-warning" class="length-warning" style="display: none;">⚠️ Song will be trimmed to 5 minutes</p>
                         </div>
-                        <audio id="song-audio" controls></audio>
+                        <div class="preview-controls">
+                            <div class="youtube-preview" id="youtube-preview" style="display: none;">
+                                <iframe id="youtube-iframe" width="300" height="169" frameborder="0" allowfullscreen></iframe>
+                                <p class="preview-note">Preview the original song</p>
+                            </div>
+                            <audio id="song-audio" controls style="display: none;"></audio>
+                        </div>
                         <button id="proceed-to-style" class="primary-btn">Choose Style</button>
                     </div>
                 </div>
@@ -174,21 +181,25 @@
                             <div class="mood-icon">🌙</div>
                             <h4>Chill</h4>
                             <p>Piano & acoustic heavy</p>
+                            <button class="preview-btn" data-style="chill">🎵 Preview</button>
                         </div>
                         <div class="mood-option" data-mood="emotional">
                             <div class="mood-icon">💫</div>
                             <h4>Emotional</h4>
                             <p>Strings & violin heavy</p>
+                            <button class="preview-btn" data-style="emotional">🎵 Preview</button>
                         </div>
                         <div class="mood-option" data-mood="energetic">
                             <div class="mood-icon">⚡</div>
                             <h4>Energetic</h4>
                             <p>Drums & bass heavy</p>
+                            <button class="preview-btn" data-style="energetic">🎵 Preview</button>
                         </div>
                         <div class="mood-option" data-mood="romantic">
                             <div class="mood-icon">💝</div>
                             <h4>Romantic</h4>
                             <p>Soft strings & piano</p>
+                            <button class="preview-btn" data-style="romantic">🎵 Preview</button>
                         </div>
                     </div>
                 </div>
@@ -200,21 +211,25 @@
                             <div class="genre-icon">🎸</div>
                             <h4>Indian Indie</h4>
                             <p>Modern fusion with tabla</p>
+                            <button class="preview-btn" data-style="indian-indie">🎵 Preview</button>
                         </div>
                         <div class="genre-option" data-genre="bollywood">
                             <div class="genre-icon">🎬</div>
                             <h4>Bollywood</h4>
                             <p>Classic film music</p>
+                            <button class="preview-btn" data-style="bollywood">🎵 Preview</button>
                         </div>
                         <div class="genre-option" data-genre="indian-classical">
                             <div class="genre-icon">🎵</div>
                             <h4>Indian Classical</h4>
                             <p>Sitar, tanpura, tabla</p>
+                            <button class="preview-btn" data-style="indian-classical">🎵 Preview</button>
                         </div>
                         <div class="genre-option" data-genre="western-pop">
                             <div class="genre-icon">🎤</div>
                             <h4>Western Pop</h4>
                             <p>Standard pop arrangement</p>
+                            <button class="preview-btn" data-style="western-pop">🎵 Preview</button>
                         </div>
                     </div>
                 </div>

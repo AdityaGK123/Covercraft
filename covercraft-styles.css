@@ -501,6 +501,49 @@ body {
     transform: translateY(-1px);
 }
 
+/* Preview Button Styles */
+.preview-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.preview-btn:hover {
+    background: var(--secondary-color);
+    transform: translateY(-1px);
+}
+
+/* YouTube Preview Styles */
+.youtube-preview {
+    text-align: center;
+    margin: 1rem 0;
+}
+
+.youtube-preview iframe {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.preview-note {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
+/* Length Warning */
+.length-warning {
+    color: #f59e0b;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
 /* Enhanced Calibration Result */
 .calibration-result .result-card {
     background: var(--card-bg);
