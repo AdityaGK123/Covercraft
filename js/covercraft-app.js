@@ -582,6 +582,12 @@ class CoverCraftApp {
         return youtubeRegex.test(url);
     }
 
+    extractYouTubeVideoId(url) {
+        const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[7].length === 11) ? match[7] : null;
+    }
+
     clearSongPreview() {
         document.getElementById('song-preview').style.display = 'none';
         document.getElementById('youtube-preview').style.display = 'none';

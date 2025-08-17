@@ -76,9 +76,14 @@ class VoiceDetector {
 
     setupCanvas() {
         this.canvas = document.getElementById('voice-canvas');
-        if (this.canvas) {
-            this.canvasContext = this.canvas.getContext('2d');
-        }
+        this.canvasCtx = this.canvas.getContext('2d');
+        this.canvas.width = 300;
+        this.canvas.height = 150;
+        
+        // Initialize music bubbles
+        this.musicBubbles = [];
+        this.noteSymbols = ['♪', '♫', '♬', '♩', '♭', '♯', '𝄞'];
+        this.colors = ['#3b82f6', '#8b5cf6', '#06d6a0', '#f59e0b', '#ef4444', '#ec4899'];
     }
 
     analyzeAudio() {
@@ -102,7 +107,9 @@ class VoiceDetector {
         }
         
         // Draw visualization
-        this.drawVisualization();
+        if (this.canvas && this.canvasCtx) {
+            this.drawVisualization();
+        }
         
         // Continue analysis
         requestAnimationFrame(() => this.analyzeAudio());
@@ -151,7 +158,7 @@ class VoiceDetector {
     }
 
     drawVisualization() {
-        if (!this.isRecording || !this.analyser) return;
+        if (!this.isRecording || !this.analyser || !this.canvas || !this.canvasCtx) return;
 
         this.analyser.getByteFrequencyData(this.dataArray);
 
@@ -175,8 +182,6 @@ class VoiceDetector {
 
         // Draw frequency blocks (tetris-style)
         this.drawFrequencyBlocks();
-
-        requestAnimationFrame(() => this.drawVisualization());
     }
 
     generateMusicBubbles(intensity) {
