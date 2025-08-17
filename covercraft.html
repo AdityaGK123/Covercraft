@@ -67,7 +67,13 @@
             <div class="calibration-content">
                 <div class="instruction-card">
                     <h3>Find Your Perfect Key</h3>
-                    <p>Sing "La la la" comfortably for 5 seconds. We'll detect your vocal range.</p>
+                    <p>Sing any song you love at a comfortable pitch for 10 seconds. We'll detect your vocal range and preferred scale.</p>
+                    <div class="recording-timer" id="recording-timer" style="display: none;">
+                        <div class="timer-circle">
+                            <span id="timer-seconds">10</span>
+                        </div>
+                        <p>Keep singing...</p>
+                    </div>
                 </div>
                 <div class="voice-visualizer">
                     <canvas id="voice-canvas" width="300" height="150"></canvas>

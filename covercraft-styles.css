@@ -527,6 +527,52 @@ body {
     color: var(--text-primary);
 }
 
+/* Recording Timer Styles */
+.recording-timer {
+    text-align: center;
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+}
+
+.timer-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: conic-gradient(var(--primary-color) 0%, var(--bg-secondary) 0%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem auto;
+    position: relative;
+    transition: background 0.3s ease;
+}
+
+.timer-circle::before {
+    content: '';
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background: var(--bg-primary);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.timer-circle span {
+    position: relative;
+    z-index: 2;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.recording-timer p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
 /* Voice Calibration */
 .calibration-content {
     padding: 1.5rem;

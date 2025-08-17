@@ -276,30 +276,63 @@ class CoverCraftApp {
     async startVoiceCalibration() {
         const startBtn = document.getElementById('start-calibration');
         const stopBtn = document.getElementById('stop-calibration');
+        const timer = document.getElementById('recording-timer');
+        const timerSeconds = document.getElementById('timer-seconds');
         
         startBtn.disabled = true;
         stopBtn.disabled = false;
         
-        try {
-            const success = await this.voiceDetection.start();
-            if (!success) {
-                throw new Error('Failed to start voice detection');
-            }
+        // Show timer
+        timer.style.display = 'block';
+        
+        // Initialize voice detection
+        this.voiceDetection = window.VoiceDetector;
+        const success = await this.voiceDetection.start();
+        
+        if (success) {
+            // Start 10-second countdown
+            let timeLeft = 10;
+            timerSeconds.textContent = timeLeft;
             
-            // Auto-complete after 10 seconds of analysis
-            setTimeout(() => this.completeVoiceCalibration(), 10000);
-        } catch (error) {
-            this.showError('Voice calibration failed. Please check microphone permissions.');
-            this.stopVoiceCalibration();
+            const countdown = setInterval(() => {
+                timeLeft--;
+                timerSeconds.textContent = timeLeft;
+                
+                // Update timer circle animation
+                const circle = document.querySelector('.timer-circle');
+                const progress = ((10 - timeLeft) / 10) * 100;
+                circle.style.background = `conic-gradient(var(--primary-color) ${progress}%, var(--bg-secondary) ${progress}%)`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    this.completeVoiceCalibration();
+                }
+            }, 1000);
+            
+            // Store countdown for manual stop
+            this.calibrationCountdown = countdown;
+        } else {
+            this.showError('Microphone access denied. Please allow microphone permissions and try again.');
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            timer.style.display = 'none';
         }
     }
 
     stopVoiceCalibration() {
         const startBtn = document.getElementById('start-calibration');
         const stopBtn = document.getElementById('stop-calibration');
+        const timer = document.getElementById('recording-timer');
         
         startBtn.disabled = false;
         stopBtn.disabled = true;
+        timer.style.display = 'none';
+        
+        // Clear countdown if running
+        if (this.calibrationCountdown) {
+            clearInterval(this.calibrationCountdown);
+            this.calibrationCountdown = null;
+        }
         
         if (this.voiceDetection) {
             this.voiceDetection.stop();
@@ -307,10 +340,25 @@ class CoverCraftApp {
     }
 
     completeVoiceCalibration() {
+        const timer = document.getElementById('recording-timer');
+        const startBtn = document.getElementById('start-calibration');
+        const stopBtn = document.getElementById('stop-calibration');
+        
+        // Hide timer and reset UI
+        timer.style.display = 'none';
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        
+        // Clear countdown if running
+        if (this.calibrationCountdown) {
+            clearInterval(this.calibrationCountdown);
+            this.calibrationCountdown = null;
+        }
+        
         // Get real results from voice detection engine
         const results = this.voiceDetection.stop();
         
-        if (results && results.confidence > 0.3) {
+        if (results && results.confidence > 0.2) {
             this.userProfile.voiceRange = { min: results.minNote, max: results.maxNote };
             this.userProfile.preferredKey = results.preferredKey;
         } else {
@@ -328,7 +376,10 @@ class CoverCraftApp {
         document.getElementById('carnatic-scale').textContent = scaleTranslations.carnatic;
         document.getElementById('calibration-result').style.display = 'block';
         
-        this.stopVoiceCalibration();
+        // Auto-proceed after 3 seconds for simplified UX
+        setTimeout(() => {
+            this.showScreen('song-upload-screen');
+        }, 3000);
     }
 
     switchUploadMethod(method) {
