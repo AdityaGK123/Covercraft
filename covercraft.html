@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoverCraft - AI Cover Creation</title>
+    <meta name="description" content="Create professional music covers with AI-powered backing tracks">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="covercraft-styles.css">
+    <meta name="theme-color" content="#6366f1">
+    <link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+    <!-- Load JavaScript modules -->
+    <script src="js/voice-detection.js"></script>
+    <script src="js/audio-engine.js"></script>
+    <script src="js/backing-track-generator.js"></script>
+    <script src="js/covercraft-app.js"></script>
+    
+    <!-- Register Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+    <div id="app" class="app-container">
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="screen active">
+            <div class="loading-content">
+                <div class="logo">🎵 CoverCraft</div>
+                <div class="loading-spinner"></div>
+                <p>Loading your music studio...</p>
+            </div>
+        </div>
+
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="screen">
+            <div class="welcome-content">
+                <div class="logo-large">🎵 CoverCraft</div>
+                <h1>Create Amazing Covers</h1>
+                <p>Turn any song into a professional cover with AI-powered backing tracks</p>
+                <div class="features-preview">
+                    <div class="feature-item">✨ AI Backing Tracks</div>
+                    <div class="feature-item">🎤 Voice Range Detection</div>
+                    <div class="feature-item">📱 Social Media Ready</div>
+                </div>
+                <button id="get-started-btn" class="primary-btn">Get Started - 3 Free Tracks</button>
+                <p class="disclaimer">Non-commercial use only • No signup required</p>
+            </div>
+        </div>
+
+        <!-- Voice Calibration Screen -->
+        <div id="voice-calibration-screen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" data-target="welcome-screen">←</button>
+                <h2>Voice Calibration</h2>
+                <div class="progress-indicator">1/7</div>
+            </div>
+            <div class="calibration-content">
+                <div class="instruction-card">
+                    <h3>Find Your Perfect Key</h3>
+                    <p>Sing "La la la" comfortably for 5 seconds. We'll detect your vocal range.</p>
+                </div>
+                <div class="voice-visualizer">
+                    <canvas id="voice-canvas" width="300" height="150"></canvas>
+                    <div class="frequency-display">
+                        <span id="detected-note">-</span>
+                        <span id="detected-frequency">0 Hz</span>
+                    </div>
+                </div>
+                <div class="calibration-controls">
+                    <button id="start-calibration" class="primary-btn">🎤 Start Recording</button>
+                    <button id="stop-calibration" class="secondary-btn" disabled>⏹ Stop</button>
+                </div>
+                <div class="calibration-result" id="calibration-result" style="display: none;">
+                    <div class="result-card">
+                        <h4>Your Vocal Range Detected!</h4>
+                        <p>Comfortable Key: <span id="user-key">C Major</span></p>
+                        <p>Range: <span id="user-range">C3 - G4</span></p>
+                        <button id="proceed-to-upload" class="primary-btn">Continue</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Song Upload Screen -->
+        <div id="song-upload-screen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" data-target="voice-calibration-screen">←</button>
+                <h2>Choose Your Song</h2>
+                <div class="progress-indicator">2/7</div>
+            </div>
+            <div class="upload-content">
+                <div class="upload-methods">
+                    <div class="upload-method active" data-method="youtube">
+                        <div class="method-icon">📺</div>
+                        <h3>YouTube Link</h3>
+                        <p>Paste any YouTube song URL</p>
+                    </div>
+                    <div class="upload-method" data-method="file">
+                        <div class="method-icon">📁</div>
+                        <h3>Upload File</h3>
+                        <p>MP3, WAV, or M4A files</p>
+                    </div>
+                </div>
+                
+                <div class="upload-form">
+                    <div id="youtube-form" class="form-section active">
+                        <input type="url" id="youtube-url" placeholder="https://youtube.com/watch?v=..." class="input-field">
+                        <button id="process-youtube" class="primary-btn">Process YouTube Link</button>
+                    </div>
+                    <div id="file-form" class="form-section">
+                        <div class="file-drop-zone" id="file-drop-zone">
+                            <div class="drop-icon">📁</div>
+                            <p>Drop your audio file here or click to browse</p>
+                            <input type="file" id="audio-file" accept="audio/*" hidden>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="legal-disclaimer">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="non-commercial-agreement">
+                        <span class="checkmark"></span>
+                        I confirm this cover is for personal, non-commercial use only
+                    </label>
+                </div>
+
+                <div class="song-preview" id="song-preview" style="display: none;">
+                    <div class="preview-card">
+                        <div class="song-info">
+                            <h4 id="song-title">Song Title</h4>
+                            <p id="song-artist">Artist</p>
+                            <p id="song-duration">Duration: 0:00</p>
+                        </div>
+                        <audio id="song-audio" controls></audio>
+                        <button id="proceed-to-style" class="primary-btn">Choose Style</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Style Selection Screen -->
+        <div id="style-selection-screen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" data-target="song-upload-screen">←</button>
+                <h2>Choose Your Vibe</h2>
+                <div class="progress-indicator">3/7</div>
+            </div>
+            <div class="style-content">
+                <div class="mood-selection">
+                    <h3>Mood</h3>
+                    <div class="mood-options">
+                        <div class="mood-option" data-mood="chill">
+                            <div class="mood-icon">🌙</div>
+                            <h4>Chill</h4>
+                            <p>Piano & acoustic heavy</p>
+                        </div>
+                        <div class="mood-option" data-mood="emotional">
+                            <div class="mood-icon">💫</div>
+                            <h4>Emotional</h4>
+                            <p>Strings & violin heavy</p>
+                        </div>
+                        <div class="mood-option" data-mood="energetic">
+                            <div class="mood-icon">⚡</div>
+                            <h4>Energetic</h4>
+                            <p>Drums & bass heavy</p>
+                        </div>
+                        <div class="mood-option" data-mood="romantic">
+                            <div class="mood-icon">💝</div>
+                            <h4>Romantic</h4>
+                            <p>Soft strings & piano</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="genre-selection">
+                    <h3>Style</h3>
+                    <div class="genre-options">
+                        <div class="genre-option" data-genre="indian-indie">
+                            <div class="genre-icon">🎸</div>
+                            <h4>Indian Indie</h4>
+                            <p>Modern fusion with tabla</p>
+                        </div>
+                        <div class="genre-option" data-genre="bollywood">
+                            <div class="genre-icon">🎬</div>
+                            <h4>Bollywood</h4>
+                            <p>Classic film music</p>
+                        </div>
+                        <div class="genre-option" data-genre="indian-classical">
+                            <div class="genre-icon">🎵</div>
+                            <h4>Indian Classical</h4>
+                            <p>Sitar, tanpura, tabla</p>
+                        </div>
+                        <div class="genre-option" data-genre="western-pop">
+                            <div class="genre-icon">🎤</div>
+                            <h4>Western Pop</h4>
+                            <p>Standard pop arrangement</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="generate-backing-track" class="primary-btn" disabled>Generate Backing Track</button>
+            </div>
+        </div>
+
+        <!-- Track Generation Screen -->
+        <div id="track-generation-screen" class="screen">
+            <div class="generation-content">
+                <div class="generation-status">
+                    <div class="generation-icon">🎵</div>
+                    <h3>Creating Your Backing Track</h3>
+                    <p id="generation-status-text">Analyzing song structure...</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="generation-progress"></div>
+                    </div>
+                </div>
+                <div class="generation-steps">
+                    <div class="step completed">✓ Song analysis</div>
+                    <div class="step active">🎵 Generating instruments</div>
+                    <div class="step">🎛 Mixing tracks</div>
+                    <div class="step">✨ Final polish</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Track Customization Screen -->
+        <div id="track-customization-screen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" data-target="style-selection-screen">←</button>
+                <h2>Customize Your Track</h2>
+                <div class="progress-indicator">4/7</div>
+            </div>
+            <div class="customization-content">
+                <div class="track-controls">
+                    <div class="track-item">
+                        <div class="track-info">
+                            <span class="track-icon">🥁</span>
+                            <span class="track-name">Drums</span>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" class="track-toggle" data-track="drums" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="track-item">
+                        <div class="track-info">
+                            <span class="track-icon">🎹</span>
+                            <span class="track-name">Piano/Guitar</span>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" class="track-toggle" data-track="melody" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="track-item">
+                        <div class="track-info">
+                            <span class="track-icon">🎻</span>
+                            <span class="track-name">Strings</span>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" class="track-toggle" data-track="strings" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="track-item">
+                        <div class="track-info">
+                            <span class="track-icon">🎸</span>
+                            <span class="track-name">Bass</span>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" class="track-toggle" data-track="bass" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="tempo-control">
+                    <h3>Tempo Control</h3>
+                    <div class="tempo-slider-container">
+                        <span class="tempo-label">50%</span>
+                        <input type="range" id="tempo-slider" min="50" max="150" value="100" class="tempo-slider">
+                        <span class="tempo-label">150%</span>
+                    </div>
+                    <div class="tempo-display">Speed: <span id="tempo-value">100%</span></div>
+                </div>
+
+                <div class="preview-controls">
+                    <button id="preview-track" class="secondary-btn">🎵 Preview</button>
+                    <button id="proceed-to-record" class="primary-btn">Record Cover</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recording Screen -->
+        <div id="recording-screen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" data-target="track-customization-screen">←</button>
+                <h2>Record Your Cover</h2>
+                <div class="progress-indicator">5/7</div>
+            </div>
+            <div class="recording-content">
+                <div class="recording-mode-selector">
+                    <div class="mode-option active" data-mode="audio-video">
+                        <div class="mode-icon">📹</div>
+                        <h4>Video + Audio</h4>
+                        <p>Perfect for social media</p>
+                    </div>
+                    <div class="mode-option" data-mode="audio-only">
+                        <div class="mode-icon">🎤</div>
+                        <h4>Audio Only</h4>
+                        <p>Focus on the music</p>
+                    </div>
+                </div>
+
+                <div class="recording-studio">
+                    <div class="video-preview" id="video-preview">
+                        <video id="camera-preview" autoplay muted></video>
+                        <div class="camera-overlay">
+                            <div class="recording-indicator" id="recording-indicator">● REC</div>
+                        </div>
+                    </div>
+
+                    <div class="audio-visualizer">
+                        <canvas id="recording-canvas" width="300" height="100"></canvas>
+                    </div>
+
+                    <div class="recording-controls">
+                        <button id="start-recording" class="record-btn">🎤 Start Recording</button>
+                        <button id="stop-recording" class="stop-btn" disabled>⏹ Stop</button>
+                        <button id="play-recording" class="play-btn" disabled>▶ Play</button>
+                    </div>
+
+                    <div class="recording-timer">
+                        <span id="recording-time">00:00</span>
+                    </div>
+                </div>
+
+                <div class="recording-result" id="recording-result" style="display: none;">
+                    <div class="result-preview">
+                        <video id="recorded-video" controls style="display: none;"></video>
+                        <audio id="recorded-audio" controls style="display: none;"></audio>
+                    </div>
+                    <div class="result-actions">
+                        <button id="retake-recording" class="secondary-btn">🔄 Retake</button>
+                        <button id="proceed-to-mix" class="primary-btn">Enhance Audio</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio Enhancement Screen -->
+        <div id="audio-enhancement-screen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" data-target="recording-screen">←</button>
+                <h2>Enhance Your Audio</h2>
+                <div class="progress-indicator">6/7</div>
+            </div>
+            <div class="enhancement-content">
+                <div class="enhancement-options">
+                    <div class="enhancement-section">
+                        <h3>Audio Cleanup</h3>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="noise-reduction" checked>
+                            <span class="checkmark"></span>
+                            Noise Reduction
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="eq-enhancement" checked>
+                            <span class="checkmark"></span>
+                            Voice EQ Enhancement
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="compression" checked>
+                            <span class="checkmark"></span>
+                            Dynamic Compression
+                        </label>
+                    </div>
+
+                    <div class="enhancement-section">
+                        <h3>Voice Effects</h3>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="autotune">
+                            <span class="checkmark"></span>
+                            Light Auto-tune
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="reverb">
+                            <span class="checkmark"></span>
+                            Room Reverb
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="echo">
+                            <span class="checkmark"></span>
+                            Subtle Echo
+                        </label>
+                    </div>
+                </div>
+
+                <div class="enhancement-preview">
+                    <h3>Preview</h3>
+                    <div class="preview-controls">
+                        <button id="preview-original" class="secondary-btn">Original</button>
+                        <button id="preview-enhanced" class="secondary-btn">Enhanced</button>
+                    </div>
+                    <audio id="enhancement-preview-audio" controls></audio>
+                </div>
+
+                <div class="enhancement-actions">
+                    <button id="apply-enhancements" class="primary-btn">Apply Enhancements</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export & Share Screen -->
+        <div id="export-screen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" data-target="audio-enhancement-screen">←</button>
+                <h2>Share Your Cover</h2>
+                <div class="progress-indicator">7/7</div>
+            </div>
+            <div class="export-content">
+                <div class="final-preview">
+                    <div class="preview-card">
+                        <h3>Your Cover is Ready! 🎉</h3>
+                        <video id="final-video" controls style="display: none;"></video>
+                        <audio id="final-audio" controls style="display: none;"></audio>
+                    </div>
+                </div>
+
+                <div class="social-share">
+                    <h3>Share Directly</h3>
+                    <div class="share-buttons">
+                        <button class="share-btn instagram" data-platform="instagram">
+                            <span class="share-icon">📷</span>
+                            Instagram
+                        </button>
+                        <button class="share-btn whatsapp" data-platform="whatsapp">
+                            <span class="share-icon">💬</span>
+                            WhatsApp
+                        </button>
+                        <button class="share-btn facebook" data-platform="facebook">
+                            <span class="share-icon">📘</span>
+                            Facebook
+                        </button>
+                    </div>
+                </div>
+
+                <div class="download-section">
+                    <button id="download-cover" class="primary-btn">📥 Download Cover</button>
+                </div>
+
+                <div class="create-another">
+                    <p>Loved creating this cover?</p>
+                    <button id="create-another-cover" class="secondary-btn">Create Another Cover</button>
+                    <p class="tracks-remaining">2 free tracks remaining</p>
+                </div>
+
+                <div class="app-branding">
+                    <p>Made with 🎵 CoverCraft</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/covercraft-app.js"></script>
+    <script src="js/audio-engine.js"></script>
+    <script src="js/voice-detection.js"></script>
+    <script src="js/backing-track-generator.js"></script>
+</body>
+</html>

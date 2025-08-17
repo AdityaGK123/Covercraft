@@ -3,37 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CapabilityGym - First You Aspire, Then You Soar</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Karla:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <title>CoverCraft - AI Cover Creation</title>
+    <meta name="description" content="Create professional music covers with AI-powered backing tracks">
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'hipo-blue': '#4C62E3',
-                        'hipo-coral': '#EE7D79',
-                        'hipo-grey': '#D5D5D5',
-                        'hipo-black': '#000000'
-                    },
-                    fontFamily: {
-                        'montserrat': ['Montserrat', 'sans-serif'],
-                        'karla': ['Karla', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
+    <meta name="theme-color" content="#6366f1">
+    <link rel="apple-touch-icon" href="icon-192.png">
 </head>
-<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors font-karla">
-    <!-- Navigation - Organic Flow -->
-    <nav class="nav-organic">
-        <div class="nav-content">
-            <a href="#" class="logo-organic" onclick="app.showDashboard(); return false;">CapabilityGym</a>
-            <ul class="nav-links">
-                <li><a href="#" onclick="app.showDashboard(); return false;">Dashboard</a></li>
+<body>
+    <div id="app" class="app-container">
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="screen active">
+            <div class="loading-content">
+                <div class="logo">🎵 CoverCraft</div>
+                <div class="loading-spinner"></div>
+                <p>Loading your music studio...</p>
+            </div>
                 <li><a href="#" onclick="app.showSkillTree(); return false;">Skill Tree</a></li>
                 <li><a href="#" onclick="app.showScenarioLibrary(); return false;">Scenarios</a></li>
                 <li><a href="#" onclick="app.showProgress(); return false;">Progress</a></li>

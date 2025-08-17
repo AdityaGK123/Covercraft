@@ -1,0 +1,248 @@
+// Voice Detection Engine - Web Audio API (No AI costs)
+class VoiceDetector {
+    constructor() {
+        this.audioContext = null;
+        this.analyser = null;
+        this.microphone = null;
+        this.dataArray = null;
+        this.canvas = null;
+        this.canvasContext = null;
+        this.isRecording = false;
+        this.frequencies = [];
+        this.detectedNotes = [];
+        
+        // Note frequency mapping (simplified)
+        this.noteFrequencies = {
+            'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'D#3': 155.56, 'E3': 164.81,
+            'F3': 174.61, 'F#3': 185.00, 'G3': 196.00, 'G#3': 207.65, 'A3': 220.00,
+            'A#3': 233.08, 'B3': 246.94, 'C4': 261.63, 'C#4': 277.18, 'D4': 293.66,
+            'D#4': 311.13, 'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00,
+            'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88, 'C5': 523.25
+        };
+    }
+
+    async start() {
+        try {
+            // Get microphone access
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            
+            // Initialize Web Audio API
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            this.analyser = this.audioContext.createAnalyser();
+            this.microphone = this.audioContext.createMediaStreamSource(stream);
+            
+            // Configure analyser
+            this.analyser.fftSize = 2048;
+            this.analyser.smoothingTimeConstant = 0.8;
+            
+            // Connect audio nodes
+            this.microphone.connect(this.analyser);
+            
+            // Initialize data array
+            const bufferLength = this.analyser.frequencyBinCount;
+            this.dataArray = new Uint8Array(bufferLength);
+            
+            // Setup canvas for visualization
+            this.setupCanvas();
+            
+            this.isRecording = true;
+            this.frequencies = [];
+            this.detectedNotes = [];
+            
+            // Start analysis loop
+            this.analyzeAudio();
+            
+            return true;
+        } catch (error) {
+            console.error('Voice detection failed:', error);
+            return false;
+        }
+    }
+
+    stop() {
+        this.isRecording = false;
+        
+        if (this.microphone) {
+            this.microphone.disconnect();
+        }
+        
+        if (this.audioContext) {
+            this.audioContext.close();
+        }
+        
+        // Analyze collected data
+        return this.calculateVoiceRange();
+    }
+
+    setupCanvas() {
+        this.canvas = document.getElementById('voice-canvas');
+        if (this.canvas) {
+            this.canvasContext = this.canvas.getContext('2d');
+        }
+    }
+
+    analyzeAudio() {
+        if (!this.isRecording) return;
+        
+        // Get frequency data
+        this.analyser.getByteFrequencyData(this.dataArray);
+        
+        // Find dominant frequency
+        const dominantFreq = this.findDominantFrequency();
+        
+        if (dominantFreq > 80 && dominantFreq < 1000) { // Human voice range
+            this.frequencies.push(dominantFreq);
+            
+            // Convert to note
+            const note = this.frequencyToNote(dominantFreq);
+            if (note) {
+                this.detectedNotes.push(note);
+                this.updateUI(note, dominantFreq);
+            }
+        }
+        
+        // Draw visualization
+        this.drawVisualization();
+        
+        // Continue analysis
+        requestAnimationFrame(() => this.analyzeAudio());
+    }
+
+    findDominantFrequency() {
+        let maxIndex = 0;
+        let maxValue = 0;
+        
+        for (let i = 0; i < this.dataArray.length; i++) {
+            if (this.dataArray[i] > maxValue) {
+                maxValue = this.dataArray[i];
+                maxIndex = i;
+            }
+        }
+        
+        // Convert bin index to frequency
+        const nyquist = this.audioContext.sampleRate / 2;
+        const frequency = (maxIndex * nyquist) / this.dataArray.length;
+        
+        return frequency;
+    }
+
+    frequencyToNote(frequency) {
+        let closestNote = null;
+        let minDifference = Infinity;
+        
+        for (const [note, noteFreq] of Object.entries(this.noteFrequencies)) {
+            const difference = Math.abs(frequency - noteFreq);
+            if (difference < minDifference) {
+                minDifference = difference;
+                closestNote = note;
+            }
+        }
+        
+        // Only return if reasonably close (within 10 Hz)
+        return minDifference < 10 ? closestNote : null;
+    }
+
+    updateUI(note, frequency) {
+        const noteElement = document.getElementById('detected-note');
+        const freqElement = document.getElementById('detected-frequency');
+        
+        if (noteElement) noteElement.textContent = note;
+        if (freqElement) freqElement.textContent = Math.round(frequency) + ' Hz';
+    }
+
+    drawVisualization() {
+        if (!this.canvas || !this.canvasContext) return;
+        
+        const width = this.canvas.width;
+        const height = this.canvas.height;
+        
+        // Clear canvas
+        this.canvasContext.fillStyle = '#111827';
+        this.canvasContext.fillRect(0, 0, width, height);
+        
+        // Draw frequency bars
+        const barWidth = width / this.dataArray.length * 2.5;
+        let x = 0;
+        
+        for (let i = 0; i < this.dataArray.length; i++) {
+            const barHeight = (this.dataArray[i] / 255) * height;
+            
+            // Color based on intensity
+            const intensity = this.dataArray[i] / 255;
+            const hue = intensity * 120; // Green to red
+            this.canvasContext.fillStyle = `hsl(${hue}, 70%, 50%)`;
+            
+            this.canvasContext.fillRect(x, height - barHeight, barWidth, barHeight);
+            x += barWidth + 1;
+        }
+    }
+
+    calculateVoiceRange() {
+        if (this.frequencies.length === 0) {
+            return {
+                minFreq: 0,
+                maxFreq: 0,
+                minNote: 'Unknown',
+                maxNote: 'Unknown',
+                preferredKey: 'C Major',
+                confidence: 0
+            };
+        }
+        
+        // Filter out outliers
+        const sortedFreqs = this.frequencies.sort((a, b) => a - b);
+        const q1Index = Math.floor(sortedFreqs.length * 0.25);
+        const q3Index = Math.floor(sortedFreqs.length * 0.75);
+        
+        const minFreq = sortedFreqs[q1Index];
+        const maxFreq = sortedFreqs[q3Index];
+        
+        // Convert to notes
+        const minNote = this.frequencyToNote(minFreq) || 'C3';
+        const maxNote = this.frequencyToNote(maxFreq) || 'G4';
+        
+        // Determine preferred key based on most common notes
+        const preferredKey = this.calculatePreferredKey();
+        
+        return {
+            minFreq: Math.round(minFreq),
+            maxFreq: Math.round(maxFreq),
+            minNote,
+            maxNote,
+            preferredKey,
+            confidence: Math.min(this.frequencies.length / 50, 1) // 0-1 based on sample count
+        };
+    }
+
+    calculatePreferredKey() {
+        // Count note occurrences
+        const noteCounts = {};
+        this.detectedNotes.forEach(note => {
+            const baseNote = note.replace(/\d+/, ''); // Remove octave
+            noteCounts[baseNote] = (noteCounts[baseNote] || 0) + 1;
+        });
+        
+        // Find most common note
+        let mostCommonNote = 'C';
+        let maxCount = 0;
+        
+        for (const [note, count] of Object.entries(noteCounts)) {
+            if (count > maxCount) {
+                maxCount = count;
+                mostCommonNote = note;
+            }
+        }
+        
+        // Map to major key
+        const keyMapping = {
+            'C': 'C Major', 'C#': 'C# Major', 'D': 'D Major', 'D#': 'D# Major',
+            'E': 'E Major', 'F': 'F Major', 'F#': 'F# Major', 'G': 'G Major',
+            'G#': 'G# Major', 'A': 'A Major', 'A#': 'A# Major', 'B': 'B Major'
+        };
+        
+        return keyMapping[mostCommonNote] || 'C Major';
+    }
+}
+
+// Global instance
+window.VoiceDetector = new VoiceDetector();
