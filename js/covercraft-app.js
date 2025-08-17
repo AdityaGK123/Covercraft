@@ -110,7 +110,31 @@ class CoverCraftApp {
         });
 
         // YouTube processing
+        const youtubeInput = document.getElementById('youtube-url');
         const processYouTubeBtn = document.getElementById('process-youtube');
+        
+        if (youtubeInput) {
+            // Real-time URL processing on input change
+            youtubeInput.addEventListener('input', (e) => {
+                const url = e.target.value.trim();
+                if (url && this.isValidYouTubeUrl(url)) {
+                    this.processYouTubeUrl(url);
+                } else if (url) {
+                    this.clearSongPreview();
+                }
+            });
+            
+            // Also process on paste
+            youtubeInput.addEventListener('paste', (e) => {
+                setTimeout(() => {
+                    const url = e.target.value.trim();
+                    if (url && this.isValidYouTubeUrl(url)) {
+                        this.processYouTubeUrl(url);
+                    }
+                }, 100);
+            });
+        }
+        
         if (processYouTubeBtn) {
             processYouTubeBtn.addEventListener('click', () => {
                 const url = document.getElementById('youtube-url').value;
@@ -418,23 +442,51 @@ class CoverCraftApp {
     }
 
     processYouTubeUrl(url) {
-        // Simulate YouTube processing
+        // Show loading state
+        this.showLoadingState('youtube-processing', 'Processing YouTube link...');
+        
         const videoId = this.extractYouTubeVideoId(url);
         if (!videoId) {
+            this.hideLoadingState('youtube-processing');
             this.showError('Invalid YouTube URL. Please check and try again.');
             return;
         }
 
-        // Mock song data - in real app, this would come from YouTube API
-        const songData = {
-            title: 'Sample Song Title',
-            artist: 'Sample Artist',
-            duration: '3:45',
-            videoId: videoId,
-            isYouTube: true
+        // Simulate processing delay with progress
+        this.simulateYouTubeProcessing(videoId);
+    }
+    
+    simulateYouTubeProcessing(videoId) {
+        const progressSteps = [
+            { progress: 20, message: 'Fetching video info...' },
+            { progress: 50, message: 'Extracting audio data...' },
+            { progress: 80, message: 'Preparing preview...' },
+            { progress: 100, message: 'Complete!' }
+        ];
+        
+        let currentStep = 0;
+        const processStep = () => {
+            if (currentStep < progressSteps.length) {
+                const step = progressSteps[currentStep];
+                this.updateLoadingProgress('youtube-processing', step.progress, step.message);
+                currentStep++;
+                setTimeout(processStep, 800);
+            } else {
+                // Complete processing
+                const songData = {
+                    title: 'Sample Song Title',
+                    artist: 'Sample Artist', 
+                    duration: '3:45',
+                    videoId: videoId,
+                    isYouTube: true
+                };
+                
+                this.hideLoadingState('youtube-processing');
+                this.displaySongPreview(songData);
+            }
         };
-
-        this.displaySongPreview(songData);
+        
+        processStep();
     }
 
     processAudioFile(file) {
@@ -470,11 +522,7 @@ class CoverCraftApp {
         
         // Show YouTube preview or audio controls
         if (songData.isYouTube && songData.videoId) {
-            const youtubePreview = document.getElementById('youtube-preview');
-            const iframe = document.getElementById('youtube-iframe');
-            iframe.src = `https://www.youtube.com/embed/${songData.videoId}?start=30&autoplay=0`;
-            youtubePreview.style.display = 'block';
-            document.getElementById('song-audio').style.display = 'none';
+            this.setupYouTubePreview(songData.videoId);
         } else if (songData.audioUrl) {
             const audioElement = document.getElementById('song-audio');
             audioElement.src = songData.audioUrl;
@@ -484,6 +532,80 @@ class CoverCraftApp {
         
         document.getElementById('song-preview').style.display = 'block';
         this.currentSong = songData;
+    }
+
+    setupYouTubePreview(videoId) {
+        const youtubePreview = document.getElementById('youtube-preview');
+        const iframe = document.getElementById('youtube-iframe');
+        
+        // Show loading state for iframe
+        this.showLoadingState('iframe-loading', 'Loading video preview...');
+        
+        // Set up iframe with load event handling
+        iframe.onload = () => {
+            this.hideLoadingState('iframe-loading');
+            youtubePreview.style.display = 'block';
+        };
+        
+        iframe.onerror = () => {
+            this.hideLoadingState('iframe-loading');
+            this.showError('Failed to load YouTube preview');
+        };
+        
+        iframe.src = `https://www.youtube.com/embed/${videoId}?start=30&autoplay=0&rel=0`;
+        document.getElementById('song-audio').style.display = 'none';
+    }
+
+    isValidYouTubeUrl(url) {
+        const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)/;
+        return youtubeRegex.test(url);
+    }
+
+    clearSongPreview() {
+        document.getElementById('song-preview').style.display = 'none';
+        document.getElementById('youtube-preview').style.display = 'none';
+        document.getElementById('song-audio').style.display = 'none';
+    }
+
+    showLoadingState(id, message) {
+        let loader = document.getElementById(id);
+        if (!loader) {
+            loader = document.createElement('div');
+            loader.id = id;
+            loader.className = 'loading-overlay';
+            loader.innerHTML = `
+                <div class="loading-spinner"></div>
+                <div class="loading-message">${message}</div>
+                <div class="loading-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-text">0%</div>
+                </div>
+            `;
+            document.body.appendChild(loader);
+        }
+        loader.style.display = 'flex';
+    }
+
+    updateLoadingProgress(id, progress, message) {
+        const loader = document.getElementById(id);
+        if (loader) {
+            const progressFill = loader.querySelector('.progress-fill');
+            const progressText = loader.querySelector('.progress-text');
+            const messageEl = loader.querySelector('.loading-message');
+            
+            if (progressFill) progressFill.style.width = `${progress}%`;
+            if (progressText) progressText.textContent = `${progress}%`;
+            if (messageEl) messageEl.textContent = message;
+        }
+    }
+
+    hideLoadingState(id) {
+        const loader = document.getElementById(id);
+        if (loader) {
+            loader.style.display = 'none';
+        }
     }
 
     updateGenerateButton() {
