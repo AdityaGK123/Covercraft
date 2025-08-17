@@ -11,6 +11,7 @@ class CoverCraftApp {
         this.currentSong = null;
         this.selectedMood = null;
         this.selectedGenre = null;
+        this.selectedTempo = 120;
         this.backingTrack = null;
         this.recordedAudio = null;
         this.recordedVideo = null;
@@ -221,6 +222,25 @@ class CoverCraftApp {
                 this.playStylePreview(e.target.getAttribute('data-style'));
             });
         });
+
+        // Tempo control
+        const styleTempoSlider = document.getElementById('style-tempo-slider');
+        const styleTempoValue = document.getElementById('style-tempo-value');
+        const previewTempoBtn = document.getElementById('preview-tempo');
+
+        if (styleTempoSlider && styleTempoValue) {
+            styleTempoSlider.addEventListener('input', (e) => {
+                const value = e.target.value;
+                styleTempoValue.textContent = value;
+                this.selectedTempo = parseInt(value);
+            });
+        }
+
+        if (previewTempoBtn) {
+            previewTempoBtn.addEventListener('click', () => {
+                this.previewCurrentStyleWithTempo();
+            });
+        }
 
         // Generate button
         const generateBtn = document.getElementById('generate-backing-track');
@@ -1190,28 +1210,67 @@ class CoverCraftApp {
     }
 
     playStylePreview(style) {
+        // Stop any currently playing preview
+        if (this.currentPreviewContext) {
+            this.currentPreviewContext.close();
+        }
+        
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        this.currentPreviewContext = audioContext;
+        
+        // Show preview feedback
+        this.showMessage(`🎵 Playing ${style} preview...`, 'info', 3000);
         
         // Style-specific instrument patterns (20-second previews)
         const stylePatterns = {
-            'chill': this.generateChillPattern(audioContext),
-            'emotional': this.generateEmotionalPattern(audioContext),
-            'energetic': this.generateEnergeticPattern(audioContext),
-            'romantic': this.generateRomanticPattern(audioContext),
-            'indian-indie': this.generateIndianIndiePattern(audioContext),
-            'bollywood': this.generateBollywoodPattern(audioContext),
-            'indian-classical': this.generateClassicalPattern(audioContext),
-            'western-pop': this.generateWesternPopPattern(audioContext)
+            'chill': this.generateChillPattern(audioContext, this.selectedTempo || 120),
+            'emotional': this.generateEmotionalPattern(audioContext, this.selectedTempo || 120),
+            'energetic': this.generateEnergeticPattern(audioContext, this.selectedTempo || 120),
+            'romantic': this.generateRomanticPattern(audioContext, this.selectedTempo || 120),
+            'indian-indie': this.generateIndianIndiePattern(audioContext, this.selectedTempo || 120),
+            'bollywood': this.generateBollywoodPattern(audioContext, this.selectedTempo || 120),
+            'indian-classical': this.generateClassicalPattern(audioContext, this.selectedTempo || 120),
+            'western-pop': this.generateWesternPopPattern(audioContext, this.selectedTempo || 120)
         };
 
         const pattern = stylePatterns[style] || stylePatterns['chill'];
         pattern();
+        
+        // Auto-stop after 20 seconds
+        setTimeout(() => {
+            if (this.currentPreviewContext === audioContext) {
+                audioContext.close();
+                this.currentPreviewContext = null;
+            }
+        }, 20000);
     }
 
-    generateChillPattern(audioContext) {
+    previewCurrentStyleWithTempo() {
+        const selectedStyle = this.getSelectedStyle();
+        if (selectedStyle) {
+            this.playStylePreview(selectedStyle);
+        } else {
+            this.showMessage('Please select a mood and style first', 'warning', 3000);
+        }
+    }
+
+    getSelectedStyle() {
+        // Combine mood and genre to determine style
+        if (this.selectedMood && this.selectedGenre) {
+            return `${this.selectedMood}-${this.selectedGenre}`;
+        } else if (this.selectedMood) {
+            return this.selectedMood;
+        } else if (this.selectedGenre) {
+            return this.selectedGenre;
+        }
+        return null;
+    }
+
+    generateChillPattern(audioContext, tempo = 120) {
         return () => {
             // Piano-based chill pattern
             const pianoNotes = [261.63, 329.63, 392.00, 523.25]; // C, E, G, C
+            const beatInterval = 60 / tempo; // Convert BPM to seconds per beat
             
             for (let i = 0; i < 8; i++) {
                 const oscillator = audioContext.createOscillator();
@@ -1223,12 +1282,13 @@ class CoverCraftApp {
                 oscillator.frequency.setValueAtTime(pianoNotes[i % 4], audioContext.currentTime);
                 oscillator.type = 'triangle';
                 
-                gainNode.gain.setValueAtTime(0, audioContext.currentTime + i * 2.5);
-                gainNode.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + i * 2.5 + 0.1);
-                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + i * 2.5 + 2);
+                const startTime = audioContext.currentTime + i * beatInterval;
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(0.2, startTime + 0.1);
+                gainNode.gain.linearRampToValueAtTime(0, startTime + beatInterval * 0.8);
                 
-                oscillator.start(audioContext.currentTime + i * 2.5);
-                oscillator.stop(audioContext.currentTime + i * 2.5 + 2.5);
+                oscillator.start(startTime);
+                oscillator.stop(startTime + beatInterval);
             }
         };
     }
