@@ -447,10 +447,12 @@ class CoverCraftApp {
         document.getElementById('carnatic-scale').textContent = scaleTranslations.carnatic;
         document.getElementById('calibration-result').style.display = 'block';
         
-        // Auto-proceed after 3 seconds for simplified UX
-        setTimeout(() => {
-            this.showScreen('song-upload-screen');
-        }, 3000);
+        // Show proceed button instead of auto-proceeding
+        const proceedBtn = document.getElementById('proceed-to-upload');
+        if (proceedBtn) {
+            proceedBtn.style.display = 'block';
+            proceedBtn.disabled = false;
+        }
     }
 
     switchUploadMethod(method) {
@@ -573,7 +575,7 @@ class CoverCraftApp {
             this.showError('Failed to load YouTube preview');
         };
         
-        iframe.src = `https://www.youtube.com/embed/${videoId}?start=30&autoplay=0&rel=0`;
+        iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?start=30&autoplay=0&rel=0&modestbranding=1`;
         document.getElementById('song-audio').style.display = 'none';
     }
 
