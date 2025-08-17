@@ -80,11 +80,16 @@
                     <button id="start-calibration" class="primary-btn">🎤 Start Recording</button>
                     <button id="stop-calibration" class="secondary-btn" disabled>⏹ Stop</button>
                 </div>
+                <div class="manual-selection">
+                    <button id="manual-scale-btn" class="secondary-btn">I Know My Scale</button>
+                </div>
                 <div class="calibration-result" id="calibration-result" style="display: none;">
                     <div class="result-card">
                         <h4>Your Vocal Range Detected!</h4>
-                        <p>Comfortable Key: <span id="user-key">C Major</span></p>
+                        <p>Western Key: <span id="user-key">C Major</span></p>
                         <p>Range: <span id="user-range">C3 - G4</span></p>
+                        <p>Hindustani: <span id="hindustani-scale">Bilawal Thaat</span></p>
+                        <p>Carnatic: <span id="carnatic-scale">Shankarabharanam</span></p>
                         <button id="proceed-to-upload" class="primary-btn">Continue</button>
                     </div>
                 </div>
@@ -469,11 +474,102 @@
                 </div>
             </div>
         </div>
+
+        <!-- Manual Scale Selection Modal -->
+        <div id="manual-scale-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Select Your Scale</h3>
+                    <button class="close-modal" onclick="document.getElementById('manual-scale-modal').style.display='none'">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="scale-selection-tabs">
+                        <button class="tab-btn active" onclick="showScaleTab('western')">Western</button>
+                        <button class="tab-btn" onclick="showScaleTab('hindustani')">Hindustani</button>
+                        <button class="tab-btn" onclick="showScaleTab('carnatic')">Carnatic</button>
+                    </div>
+                    
+                    <div id="western-tab" class="scale-tab active">
+                        <label for="western-scale-select">Choose Western Scale:</label>
+                        <select id="western-scale-select">
+                            <option value="C Major">C Major</option>
+                            <option value="D Major">D Major</option>
+                            <option value="E Major">E Major</option>
+                            <option value="F Major">F Major</option>
+                            <option value="G Major">G Major</option>
+                            <option value="A Major">A Major</option>
+                            <option value="B Major">B Major</option>
+                        </select>
+                        <p class="scale-description">Most common for beginners. Bright and happy sound.</p>
+                    </div>
+                    
+                    <div id="hindustani-tab" class="scale-tab">
+                        <label for="hindustani-scale-select">Choose Hindustani Thaat:</label>
+                        <select id="hindustani-scale-select">
+                            <option value="Bilawal">Bilawal Thaat</option>
+                            <option value="Khamaj">Khamaj Thaat</option>
+                            <option value="Kalyan">Kalyan Thaat</option>
+                            <option value="Bhairav">Bhairav Thaat</option>
+                            <option value="Kafi">Kafi Thaat</option>
+                            <option value="Yaman">Yaman Thaat</option>
+                            <option value="Marwa">Marwa Thaat</option>
+                        </select>
+                        <p class="scale-description">Traditional North Indian classical scales.</p>
+                    </div>
+                    
+                    <div id="carnatic-tab" class="scale-tab">
+                        <label for="carnatic-scale-select">Choose Carnatic Ragam:</label>
+                        <select id="carnatic-scale-select">
+                            <option value="Shankarabharanam">Shankarabharanam</option>
+                            <option value="Harikambhoji">Harikambhoji</option>
+                            <option value="Kalyani">Kalyani</option>
+                            <option value="Mayamalavagowla">Mayamalavagowla</option>
+                            <option value="Kharaharapriya">Kharaharapriya</option>
+                        </select>
+                        <p class="scale-description">Traditional South Indian classical scales.</p>
+                    </div>
+                    
+                    <div class="sample-controls">
+                        <button id="play-scale-sample" class="secondary-btn">🎵 Play Sample</button>
+                        <p class="sample-description">Listen to understand your vocal range in this scale</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="confirm-manual-scale" class="primary-btn">Confirm Selection</button>
+                    <button class="secondary-btn" onclick="document.getElementById('manual-scale-modal').style.display='none'">Cancel</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <script src="js/covercraft-app.js"></script>
-    <script src="js/audio-engine.js"></script>
+    <!-- Load JavaScript modules -->
     <script src="js/voice-detection.js"></script>
+    <script src="js/audio-engine.js"></script>
     <script src="js/backing-track-generator.js"></script>
+    <script src="js/covercraft-app.js"></script>
+    
+    <!-- Register Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+        
+        // Scale tab switching
+        function showScaleTab(tabName) {
+            document.querySelectorAll('.scale-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
 </body>
 </html>

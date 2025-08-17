@@ -16,7 +16,7 @@ class CoverCraftApp {
         this.recordedVideo = null;
         
         // Initialize audio engines
-        this.voiceDetection = window.VoiceDetector;
+        this.voiceDetection = window.VoiceDetection;
         this.audioEngine = window.AudioEngine;
         this.backingTrackGenerator = window.BackingTrackGenerator;
         
@@ -61,32 +61,14 @@ class CoverCraftApp {
     setupVoiceCalibration() {
         const startBtn = document.getElementById('start-calibration');
         const stopBtn = document.getElementById('stop-calibration');
-        // Event listeners
-        document.getElementById('get-started-btn').addEventListener('click', () => {
-            this.showScreen('voice-calibration-screen');
-        });
-
-        document.getElementById('start-calibration').addEventListener('click', () => {
-            this.startVoiceCalibration();
-        });
-
-        document.getElementById('stop-calibration').addEventListener('click', () => {
-            this.stopVoiceCalibration();
-        });
-
-        document.getElementById('manual-scale-btn').addEventListener('click', () => {
-            this.showManualScaleSelection();
-        });
-
-        document.getElementById('confirm-manual-scale').addEventListener('click', () => {
-            this.selectManualScale();
-        });
-
-        document.getElementById('play-scale-sample').addEventListener('click', () => {
-            const selectedScale = document.getElementById('western-scale-select').value;
-            this.playScaleSample(selectedScale);
-        });
         const proceedBtn = document.getElementById('proceed-to-upload');
+
+        if (startBtn) {
+            startBtn.addEventListener('click', () => this.startVoiceCalibration());
+        }
+        if (stopBtn) {
+            stopBtn.addEventListener('click', () => this.stopVoiceCalibration());
+        }
         if (proceedBtn) {
             proceedBtn.addEventListener('click', () => this.showScreen('song-upload-screen'));
         }
@@ -281,10 +263,8 @@ class CoverCraftApp {
         stopBtn.disabled = false;
         
         try {
-            const success = await this.voiceDetection.start();
-            if (!success) {
-                throw new Error('Failed to start voice detection');
-            }
+            await this.voiceDetection.initialize();
+            await this.voiceDetection.startDetection();
             
             // Auto-complete after 10 seconds of analysis
             setTimeout(() => this.completeVoiceCalibration(), 10000);
@@ -302,30 +282,24 @@ class CoverCraftApp {
         stopBtn.disabled = true;
         
         if (this.voiceDetection) {
-            this.voiceDetection.stop();
+            this.voiceDetection.stopDetection();
         }
     }
 
     completeVoiceCalibration() {
         // Get real results from voice detection engine
-        const results = this.voiceDetection.stop();
-        
-        if (results && results.confidence > 0.3) {
-            this.userProfile.voiceRange = { min: results.minNote, max: results.maxNote };
+        if (this.voiceDetection && this.voiceDetection.analysisResults) {
+            const results = this.voiceDetection.analysisResults;
+            this.userProfile.voiceRange = results.voiceRange;
             this.userProfile.preferredKey = results.preferredKey;
         } else {
-            // Fallback values for poor detection
+            // Fallback values
             this.userProfile.voiceRange = { min: 'C3', max: 'G4' };
             this.userProfile.preferredKey = 'C Major';
         }
         
-        // Translate to Indian scales
-        const scaleTranslations = this.translateToIndianScales(this.userProfile.preferredKey);
-        
         document.getElementById('user-key').textContent = this.userProfile.preferredKey;
         document.getElementById('user-range').textContent = `${this.userProfile.voiceRange.min} - ${this.userProfile.voiceRange.max}`;
-        document.getElementById('hindustani-scale').textContent = scaleTranslations.hindustani;
-        document.getElementById('carnatic-scale').textContent = scaleTranslations.carnatic;
         document.getElementById('calibration-result').style.display = 'block';
         
         this.stopVoiceCalibration();
@@ -628,150 +602,6 @@ class CoverCraftApp {
 
     showError(message) {
         this.showMessage(message, 'error');
-    }
-
-    // Indian Scale Translation System
-    translateToIndianScales(westernKey) {
-        const scaleMap = {
-            'C Major': { 
-                hindustani: 'Bilawal Thaat (Sa Re Ga Ma Pa Dha Ni)', 
-                carnatic: 'Shankarabharanam (Sa Ri Ga Ma Pa Dha Ni)' 
-            },
-            'D Major': { 
-                hindustani: 'Khamaj Thaat (Sa Re Ga Ma Pa Dha ni)', 
-                carnatic: 'Harikambhoji (Sa Ri Ga Ma Pa Dha ni)' 
-            },
-            'E Major': { 
-                hindustani: 'Kalyan Thaat (Sa Re Ga ma Pa Dha Ni)', 
-                carnatic: 'Kalyani (Sa Ri Ga ma Pa Dha Ni)' 
-            },
-            'F Major': { 
-                hindustani: 'Bhairav Thaat (Sa ra Ga Ma Pa dha Ni)', 
-                carnatic: 'Mayamalavagowla (Sa ra Ga Ma Pa dha Ni)' 
-            },
-            'G Major': { 
-                hindustani: 'Kafi Thaat (Sa Re ga Ma Pa Dha ni)', 
-                carnatic: 'Kharaharapriya (Sa Ri ga Ma Pa Dha ni)' 
-            },
-            'A Major': { 
-                hindustani: 'Yaman Thaat (Sa Re Ga ma Pa Dha Ni)', 
-                carnatic: 'Kalyani (Sa Ri Ga ma Pa Dha Ni)' 
-            },
-            'B Major': { 
-                hindustani: 'Marwa Thaat (Sa ra Ga ma Pa Dha Ni)', 
-                carnatic: 'Gamanashrama (Sa ra Ga ma Pa Dha Ni)' 
-            }
-        };
-
-        return scaleMap[westernKey] || { 
-            hindustani: 'Bilawal Thaat (Sa Re Ga Ma Pa Dha Ni)', 
-            carnatic: 'Shankarabharanam (Sa Ri Ga Ma Pa Dha Ni)' 
-        };
-    }
-
-    // Manual Scale Selection for Advanced Users
-    showManualScaleSelection() {
-        const modal = document.getElementById('manual-scale-modal');
-        if (modal) {
-            modal.style.display = 'block';
-            this.populateScaleOptions();
-        }
-    }
-
-    populateScaleOptions() {
-        const westernSelect = document.getElementById('western-scale-select');
-        const hindustaniSelect = document.getElementById('hindustani-scale-select');
-        const carnaticSelect = document.getElementById('carnatic-scale-select');
-
-        if (westernSelect) {
-            westernSelect.innerHTML = `
-                <option value="C Major">C Major</option>
-                <option value="D Major">D Major</option>
-                <option value="E Major">E Major</option>
-                <option value="F Major">F Major</option>
-                <option value="G Major">G Major</option>
-                <option value="A Major">A Major</option>
-                <option value="B Major">B Major</option>
-            `;
-        }
-
-        if (hindustaniSelect) {
-            hindustaniSelect.innerHTML = `
-                <option value="Bilawal">Bilawal Thaat</option>
-                <option value="Khamaj">Khamaj Thaat</option>
-                <option value="Kalyan">Kalyan Thaat</option>
-                <option value="Bhairav">Bhairav Thaat</option>
-                <option value="Kafi">Kafi Thaat</option>
-                <option value="Yaman">Yaman Thaat</option>
-                <option value="Marwa">Marwa Thaat</option>
-            `;
-        }
-
-        if (carnaticSelect) {
-            carnaticSelect.innerHTML = `
-                <option value="Shankarabharanam">Shankarabharanam</option>
-                <option value="Harikambhoji">Harikambhoji</option>
-                <option value="Kalyani">Kalyani</option>
-                <option value="Mayamalavagowla">Mayamalavagowla</option>
-                <option value="Kharaharapriya">Kharaharapriya</option>
-            `;
-        }
-    }
-
-    selectManualScale() {
-        const selectedScale = document.getElementById('western-scale-select').value;
-        this.userProfile.preferredKey = selectedScale;
-        
-        // Set default range based on scale
-        this.userProfile.voiceRange = { min: 'C3', max: 'G4' };
-        
-        // Update display
-        const scaleTranslations = this.translateToIndianScales(selectedScale);
-        document.getElementById('user-key').textContent = selectedScale;
-        document.getElementById('user-range').textContent = `${this.userProfile.voiceRange.min} - ${this.userProfile.voiceRange.max}`;
-        document.getElementById('hindustani-scale').textContent = scaleTranslations.hindustani;
-        document.getElementById('carnatic-scale').textContent = scaleTranslations.carnatic;
-        document.getElementById('calibration-result').style.display = 'block';
-        
-        // Close modal
-        document.getElementById('manual-scale-modal').style.display = 'none';
-        
-        // Play sample for selected scale
-        this.playScaleSample(selectedScale);
-    }
-
-    playScaleSample(scale) {
-        // Create a simple scale sample using Web Audio API
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const scaleFrequencies = {
-            'C Major': [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25],
-            'D Major': [293.66, 329.63, 369.99, 392.00, 440.00, 493.88, 554.37, 587.33],
-            'E Major': [329.63, 369.99, 415.30, 440.00, 493.88, 554.37, 622.25, 659.25],
-            'F Major': [349.23, 392.00, 440.00, 466.16, 523.25, 587.33, 659.25, 698.46],
-            'G Major': [392.00, 440.00, 493.88, 523.25, 587.33, 659.25, 739.99, 783.99],
-            'A Major': [440.00, 493.88, 554.37, 587.33, 659.25, 739.99, 830.61, 880.00],
-            'B Major': [493.88, 554.37, 622.25, 659.25, 739.99, 830.61, 932.33, 987.77]
-        };
-
-        const frequencies = scaleFrequencies[scale] || scaleFrequencies['C Major'];
-        
-        frequencies.forEach((freq, index) => {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
-            oscillator.type = 'sine';
-            
-            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + index * 0.5 + 0.1);
-            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + index * 0.5 + 0.4);
-            
-            oscillator.start(audioContext.currentTime + index * 0.5);
-            oscillator.stop(audioContext.currentTime + index * 0.5 + 0.5);
-        });
     }
 }
 
