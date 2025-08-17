@@ -8,57 +8,57 @@ class BackingTrackGenerator {
         
         // Pre-defined instrument samples (URLs would point to your sample library)
         this.instrumentSamples = {
-            'indian-indie': {
-                drums: '/samples/indian-indie/drums.wav',
-                acoustic: '/samples/indian-indie/acoustic.wav',
-                tabla: '/samples/indian-indie/tabla.wav',
-                strings: '/samples/indian-indie/strings.wav'
+            'indie-acoustic': {
+                percussion: '/samples/indie/percussion.wav',
+                acoustic: '/samples/indie/acoustic.wav',
+                strings: '/samples/indie/strings.wav',
+                bass: '/samples/indie/bass.wav'
             },
-            'bollywood': {
-                drums: '/samples/bollywood/drums.wav',
-                piano: '/samples/bollywood/piano.wav',
-                strings: '/samples/bollywood/strings.wav',
-                harmonium: '/samples/bollywood/harmonium.wav'
+            'singer-songwriter': {
+                percussion: '/samples/singer/percussion.wav',
+                piano: '/samples/singer/piano.wav',
+                acoustic: '/samples/singer/acoustic.wav',
+                strings: '/samples/singer/strings.wav'
             },
-            'indian-classical': {
-                tabla: '/samples/classical/tabla.wav',
-                sitar: '/samples/classical/sitar.wav',
-                tanpura: '/samples/classical/tanpura.wav',
-                violin: '/samples/classical/violin.wav'
+            'folk-pop': {
+                percussion: '/samples/folk/percussion.wav',
+                acoustic: '/samples/folk/acoustic.wav',
+                strings: '/samples/folk/strings.wav',
+                harmonium: '/samples/folk/harmonium.wav'
             },
-            'western-pop': {
-                drums: '/samples/western/drums.wav',
-                piano: '/samples/western/piano.wav',
-                guitar: '/samples/western/guitar.wav',
-                bass: '/samples/western/bass.wav'
+            'neo-soul': {
+                percussion: '/samples/soul/percussion.wav',
+                'electric-piano': '/samples/soul/electric-piano.wav',
+                acoustic: '/samples/soul/acoustic.wav',
+                strings: '/samples/soul/strings.wav'
             }
         };
 
-        // Mood-based mixing templates
+        // NPR Tiny Desk style mood templates - stripped down, intimate
         this.moodTemplates = {
             chill: {
-                drums: 0.3,
-                melody: 0.8,
-                strings: 0.6,
-                bass: 0.4
+                percussion: 0.2,  // Subtle shakers/tambourine
+                melody: 0.7,      // Acoustic guitar or soft piano
+                strings: 0.4,     // Light string accompaniment
+                bass: 0.3         // Minimal bass presence
             },
             emotional: {
-                drums: 0.2,
-                melody: 0.5,
-                strings: 0.9,
-                bass: 0.3
+                percussion: 0.1,  // Very minimal percussion
+                melody: 0.6,      // Piano or fingerpicked guitar
+                strings: 0.8,     // Prominent strings for emotion
+                bass: 0.2         // Subtle bass support
             },
             energetic: {
-                drums: 0.9,
-                melody: 0.7,
-                strings: 0.5,
-                bass: 0.8
+                percussion: 0.4,  // Congo and tambourine
+                melody: 0.8,      // Strummed acoustic guitar
+                strings: 0.3,     // Light string accents
+                bass: 0.4         // Moderate bass groove
             },
             romantic: {
-                drums: 0.2,
-                melody: 0.7,
-                strings: 0.8,
-                bass: 0.3
+                percussion: 0.1,  // Barely there percussion
+                melody: 0.5,      // Soft piano or guitar
+                strings: 0.7,     // Warm string section
+                bass: 0.2         // Minimal bass
             }
         };
     }
@@ -117,8 +117,16 @@ class BackingTrackGenerator {
                     this.generateTablaPattern(channelData, sampleRate);
                     break;
                 case 'piano':
+                    this.generateClassicalPiano(channelData, sampleRate, 'major');
+                    break;
+                case 'electric-piano':
+                    this.generateElectricPiano(channelData, sampleRate, 'major');
+                    break;
+                case 'percussion':
+                    this.generateDrumPattern(channelData, sampleRate);
+                    break;
                 case 'acoustic':
-                    this.generateChordProgression(channelData, sampleRate, 'major');
+                    this.generateGuitarStrumming(channelData, sampleRate);
                     break;
                 case 'sitar':
                     this.generateSitarMelody(channelData, sampleRate);
@@ -148,25 +156,31 @@ class BackingTrackGenerator {
     }
 
     generateDrumPattern(channelData, sampleRate) {
+        // Organic percussion: Congo, tambourine, shakers
         const beatInterval = sampleRate * 0.5; // 120 BPM
         
         for (let i = 0; i < channelData.length; i++) {
             const beatPosition = i % beatInterval;
+            const time = i / sampleRate;
             
-            // Kick on beats 1 and 3
-            if (beatPosition < 1000 && (Math.floor(i / beatInterval) % 2 === 0)) {
-                channelData[i] = Math.sin(2 * Math.PI * 60 * i / sampleRate) * 
-                                Math.exp(-beatPosition / 500) * 0.8;
+            // Congo drum on beats 1 and 3 (warm, woody tone)
+            if (beatPosition < 2000 && (Math.floor(i / beatInterval) % 2 === 0)) {
+                const congoFreq = 80 + 20 * Math.sin(time * 0.1); // Slight pitch variation
+                channelData[i] = Math.sin(2 * Math.PI * congoFreq * i / sampleRate) * 
+                                Math.exp(-beatPosition / 800) * 0.6 *
+                                (1 + 0.3 * Math.sin(2 * Math.PI * congoFreq * 2 * i / sampleRate)); // Harmonics
             }
-            // Snare on beats 2 and 4
-            else if (beatPosition < 500 && (Math.floor(i / beatInterval) % 2 === 1)) {
-                channelData[i] = (Math.random() * 2 - 1) * 
-                                Math.exp(-beatPosition / 200) * 0.6;
-            }
-            // Hi-hat
-            else if (beatPosition < 100) {
+            // Tambourine on off-beats (metallic jingle)
+            else if (beatPosition < 300 && (Math.floor(i / beatInterval) % 4 === 1)) {
+                const jingleFreq = 3000 + 1000 * Math.random();
                 channelData[i] += (Math.random() * 2 - 1) * 
-                                 Math.exp(-beatPosition / 50) * 0.2;
+                                 Math.exp(-beatPosition / 150) * 0.3 *
+                                 Math.sin(2 * Math.PI * jingleFreq * i / sampleRate);
+            }
+            // Shakers (continuous subtle rhythm)
+            else if (Math.random() < 0.02) {
+                channelData[i] += (Math.random() * 2 - 1) * 0.15 *
+                                 Math.exp(-50 / sampleRate);
             }
         }
     }
@@ -190,20 +204,37 @@ class BackingTrackGenerator {
         }
     }
 
-    generateChordProgression(channelData, sampleRate, scale) {
+    generateClassicalPiano(channelData, sampleRate, scale) {
+        // Classical piano with natural timbre and dynamics
         const chordDuration = sampleRate * 2; // 2 seconds per chord
-        const chords = [261.63, 329.63, 392.00, 261.63]; // C-E-G-C progression
+        const chords = [
+            [261.63, 329.63, 392.00], // C major
+            [293.66, 369.99, 440.00], // D minor  
+            [329.63, 415.30, 493.88], // E minor
+            [349.23, 440.00, 523.25]  // F major
+        ];
         
         for (let i = 0; i < channelData.length; i++) {
             const chordIndex = Math.floor(i / chordDuration) % chords.length;
-            const baseFreq = chords[chordIndex];
+            const chord = chords[chordIndex];
+            const chordPosition = i % chordDuration;
             
-            // Generate chord (root + third + fifth)
-            const root = Math.sin(2 * Math.PI * baseFreq * i / sampleRate);
-            const third = Math.sin(2 * Math.PI * baseFreq * 1.25 * i / sampleRate);
-            const fifth = Math.sin(2 * Math.PI * baseFreq * 1.5 * i / sampleRate);
+            let sample = 0;
+            chord.forEach((freq, noteIndex) => {
+                // Piano attack and decay envelope
+                const attack = Math.min(1, chordPosition / (sampleRate * 0.05));
+                const decay = Math.exp(-chordPosition / (sampleRate * 1.2));
+                const envelope = attack * decay;
+                
+                // Piano harmonics for natural timbre
+                const fundamental = Math.sin(2 * Math.PI * freq * i / sampleRate);
+                const harmonic2 = Math.sin(2 * Math.PI * freq * 2 * i / sampleRate) * 0.3;
+                const harmonic3 = Math.sin(2 * Math.PI * freq * 3 * i / sampleRate) * 0.1;
+                
+                sample += (fundamental + harmonic2 + harmonic3) * envelope * (0.8 - noteIndex * 0.1);
+            });
             
-            channelData[i] = (root + third * 0.7 + fifth * 0.5) * 0.3;
+            channelData[i] = sample * 0.25;
         }
     }
 
@@ -240,18 +271,46 @@ class BackingTrackGenerator {
     }
 
     generateStringSection(channelData, sampleRate) {
-        // Lush string pad
-        const chordFreqs = [261.63, 329.63, 392.00, 523.25]; // C major chord
+        // Light Hollywood strings and violins - warm, cinematic
+        const time = channelData.length / sampleRate;
+        const chordProgression = [
+            [261.63, 329.63, 392.00, 523.25], // C major
+            [293.66, 369.99, 440.00, 587.33], // D minor
+            [329.63, 415.30, 493.88, 659.25], // E minor  
+            [349.23, 440.00, 523.25, 698.46]  // F major
+        ];
         
         for (let i = 0; i < channelData.length; i++) {
+            const currentTime = i / sampleRate;
+            const chordIndex = Math.floor(currentTime / 2) % chordProgression.length;
+            const chord = chordProgression[chordIndex];
+            
             let sample = 0;
             
-            chordFreqs.forEach(freq => {
-                const envelope = 1 - Math.exp(-i / (sampleRate * 0.5));
-                sample += Math.sin(2 * Math.PI * freq * i / sampleRate) * envelope;
+            chord.forEach((freq, voiceIndex) => {
+                // Slow attack for strings
+                const attack = Math.min(1, currentTime / 1.5);
+                
+                // Subtle vibrato for realism
+                const vibrato = 1 + 0.015 * Math.sin(2 * Math.PI * 4.5 * currentTime);
+                const vibratoFreq = freq * vibrato;
+                
+                // String harmonics for warmth
+                const fundamental = Math.sin(2 * Math.PI * vibratoFreq * currentTime);
+                const harmonic2 = Math.sin(2 * Math.PI * vibratoFreq * 2 * currentTime) * 0.3;
+                const harmonic3 = Math.sin(2 * Math.PI * vibratoFreq * 3 * currentTime) * 0.15;
+                
+                // Bow dynamics simulation
+                const bowPressure = 0.8 + 0.2 * Math.sin(2 * Math.PI * 0.3 * currentTime);
+                
+                sample += (fundamental + harmonic2 + harmonic3) * 
+                         attack * bowPressure * (0.7 - voiceIndex * 0.1);
             });
             
-            channelData[i] = sample * 0.2;
+            // String section ensemble effect (slight detuning)
+            const ensemble = 1 + 0.002 * Math.sin(2 * Math.PI * 0.7 * currentTime);
+            
+            channelData[i] = sample * ensemble * 0.18;
         }
     }
 
@@ -293,23 +352,97 @@ class BackingTrackGenerator {
     }
 
     generateGuitarStrumming(channelData, sampleRate) {
-        const chordDuration = sampleRate * 0.5;
-        const chordFreqs = [82.41, 110.00, 146.83, 196.00]; // Guitar chord
+        // Realistic acoustic guitar with fretting, strumming, and fingering
+        const chordDuration = sampleRate * 1; // 1 second per strum
+        const openStrings = [82.41, 110.00, 146.83, 196.00, 246.94, 329.63]; // E-A-D-G-B-E
         
         for (let i = 0; i < channelData.length; i++) {
             const strumPosition = i % chordDuration;
+            const time = i / sampleRate;
             
-            if (strumPosition < chordDuration * 0.1) {
+            if (strumPosition < chordDuration * 0.15) { // Strum duration
                 let sample = 0;
-                chordFreqs.forEach((freq, index) => {
-                    const delay = index * 20; // Slight strum delay
-                    if (strumPosition > delay) {
-                        sample += Math.sin(2 * Math.PI * freq * i / sampleRate) * 
-                                 Math.exp(-(strumPosition - delay) / 1000);
+                
+                openStrings.forEach((freq, stringIndex) => {
+                    const stringDelay = stringIndex * 8; // Realistic strum timing
+                    
+                    if (strumPosition > stringDelay) {
+                        // String pluck attack
+                        const pluckEnvelope = Math.exp(-(strumPosition - stringDelay) / 200);
+                        
+                        // Body resonance and harmonics
+                        const fundamental = Math.sin(2 * Math.PI * freq * i / sampleRate);
+                        const harmonic2 = Math.sin(2 * Math.PI * freq * 2 * i / sampleRate) * 0.4;
+                        const harmonic3 = Math.sin(2 * Math.PI * freq * 3 * i / sampleRate) * 0.2;
+                        
+                        // String damping and fret buzz simulation
+                        const dampening = 1 - (stringIndex * 0.05);
+                        const fretBuzz = (Math.random() * 2 - 1) * 0.02 * pluckEnvelope;
+                        
+                        sample += (fundamental + harmonic2 + harmonic3) * 
+                                 pluckEnvelope * dampening * (0.9 - stringIndex * 0.1) + fretBuzz;
                     }
                 });
-                channelData[i] = sample * 0.4;
+                
+                // Body resonance
+                const bodyResonance = Math.sin(2 * Math.PI * 100 * i / sampleRate) * 0.1 * 
+                                     Math.exp(-strumPosition / 500);
+                
+                channelData[i] = (sample + bodyResonance) * 0.3;
             }
+            // Sustain and natural decay
+            else if (strumPosition < chordDuration * 0.8) {
+                const sustainPosition = strumPosition - chordDuration * 0.15;
+                const sustainDecay = Math.exp(-sustainPosition / (sampleRate * 0.6));
+                
+                let sustainSample = 0;
+                openStrings.forEach((freq, stringIndex) => {
+                    sustainSample += Math.sin(2 * Math.PI * freq * i / sampleRate) * 
+                                   sustainDecay * (0.3 - stringIndex * 0.03);
+                });
+                
+                channelData[i] = sustainSample * 0.15;
+            }
+        }
+    }
+
+    generateElectricPiano(channelData, sampleRate, scale) {
+        // Electric piano with bell-like tone and natural dynamics
+        const chordDuration = sampleRate * 2; // 2 seconds per chord
+        const chords = [
+            [261.63, 329.63, 392.00], // C major
+            [293.66, 369.99, 440.00], // D minor  
+            [329.63, 415.30, 493.88], // E minor
+            [349.23, 440.00, 523.25]  // F major
+        ];
+        
+        for (let i = 0; i < channelData.length; i++) {
+            const chordIndex = Math.floor(i / chordDuration) % chords.length;
+            const chord = chords[chordIndex];
+            const chordPosition = i % chordDuration;
+            const time = i / sampleRate;
+            
+            let sample = 0;
+            chord.forEach((freq, noteIndex) => {
+                // Electric piano attack and sustain
+                const attack = Math.min(1, chordPosition / (sampleRate * 0.02));
+                const sustain = Math.exp(-chordPosition / (sampleRate * 2.5));
+                const envelope = attack * sustain;
+                
+                // Bell-like harmonics for electric piano timbre
+                const fundamental = Math.sin(2 * Math.PI * freq * time);
+                const harmonic2 = Math.sin(2 * Math.PI * freq * 2 * time) * 0.6;
+                const harmonic3 = Math.sin(2 * Math.PI * freq * 3 * time) * 0.3;
+                const harmonic5 = Math.sin(2 * Math.PI * freq * 5 * time) * 0.1;
+                
+                // Tremolo effect
+                const tremolo = 1 + 0.1 * Math.sin(2 * Math.PI * 6 * time);
+                
+                sample += (fundamental + harmonic2 + harmonic3 + harmonic5) * 
+                         envelope * tremolo * (0.7 - noteIndex * 0.1);
+            });
+            
+            channelData[i] = sample * 0.22;
         }
     }
 
@@ -394,11 +527,13 @@ class BackingTrackGenerator {
     }
 
     getVolumeForInstrument(instrument, moodTemplate) {
-        // Map instrument names to mood template keys
+        // Map instrument names to mood template keys for NPR Tiny Desk style
         const instrumentMapping = {
-            'drums': 'drums',
-            'tabla': 'drums',
+            'drums': 'percussion',
+            'tabla': 'percussion', 
+            'percussion': 'percussion',
             'piano': 'melody',
+            'electric-piano': 'melody',
             'acoustic': 'melody',
             'sitar': 'melody',
             'guitar': 'melody',
