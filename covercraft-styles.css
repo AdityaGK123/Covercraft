@@ -629,6 +629,56 @@ body {
     opacity: 0.8;
 }
 
+/* Usage Info Styles */
+.usage-info {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.usage-stats h4 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.usage-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 0.5rem 0;
+}
+
+.usage-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #f59e0b, #ef4444);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.usage-warning {
+    color: #f59e0b;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
+.quota-message, .rate-limit-message {
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.quota-message h4, .rate-limit-message h4 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
 /* Enhanced Calibration Result */
 .calibration-result .result-card {
     background: var(--card-bg);

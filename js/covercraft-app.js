@@ -15,10 +15,11 @@ class CoverCraftApp {
         this.recordedAudio = null;
         this.recordedVideo = null;
         
-        // Initialize audio engines
-        this.voiceDetection = window.VoiceDetector;
+        // Initialize components
+        this.voiceDetector = new VoiceDetector();
+        this.backingTrackGenerator = new BackingTrackGenerator();
+        this.aiEngine = new AIEngine();
         this.audioEngine = window.AudioEngine;
-        this.backingTrackGenerator = window.BackingTrackGenerator;
         
         this.init();
     }
@@ -619,18 +620,34 @@ class CoverCraftApp {
         this.showScreen('track-generation-screen');
         
         try {
-            // Use real backing track generator
-            const backingTrack = await this.backingTrackGenerator.generateBackingTrack(
+            // Generate unique user ID for quota tracking
+            const userId = this.generateUserId();
+            
+            // Use AI Engine for intelligent backing track generation
+            const backingTrack = await this.aiEngine.generateBackingTrack(
                 this.currentSong,
                 this.selectedMood,
                 this.selectedGenre,
-                this.userProfile.preferredKey
+                this.userProfile.preferredKey,
+                userId
             );
             
             this.backingTrack = backingTrack;
+            
+            // Show usage stats to user
+            this.displayUsageInfo();
+            
             this.completeTrackGeneration();
         } catch (error) {
-            console.error('Backing track generation failed:', error);
+            console.error('AI backing track generation failed:', error);
+            
+            // Show error message to user
+            if (error.message.includes('quota exceeded')) {
+                this.showQuotaExceededMessage();
+            } else if (error.message.includes('Too many requests')) {
+                this.showRateLimitMessage();
+            }
+            
             // Fallback to simulation
             this.simulateTrackGeneration();
         }
@@ -652,14 +669,57 @@ class CoverCraftApp {
     }
 
     completeTrackGeneration() {
-        this.backingTrack = {
-            drums: true,
-            melody: true,
-            strings: true,
-            bass: true,
-            tempo: 100
-        };
         this.showScreen('track-customization-screen');
+        this.setupTrackCustomization();
+    }
+
+    generateUserId() {
+        // Generate or retrieve persistent user ID for quota tracking
+        let userId = localStorage.getItem('covercraft_user_id');
+        if (!userId) {
+            userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('covercraft_user_id', userId);
+        }
+        return userId;
+    }
+
+    displayUsageInfo() {
+        const stats = this.aiEngine.getUsageStats();
+        const usageInfo = document.getElementById('usage-info');
+        
+        if (usageInfo) {
+            usageInfo.innerHTML = `
+                <div class="usage-stats">
+                    <h4>🤖 AI Generation Active</h4>
+                    <p>Monthly Usage: ${stats.percentageUsed.toFixed(1)}% (${stats.monthlyUsage}/${stats.monthlyLimit} tokens)</p>
+                    <div class="usage-bar">
+                        <div class="usage-fill" style="width: ${Math.min(stats.percentageUsed, 100)}%"></div>
+                    </div>
+                    ${stats.percentageUsed > 90 ? '<p class="usage-warning">⚠️ High usage - switching to fallback mode soon</p>' : ''}
+                </div>
+            `;
+        }
+    }
+
+    showQuotaExceededMessage() {
+        this.showMessage(`
+            <div class="quota-message">
+                <h4>🎵 Daily Quota Reached</h4>
+                <p>You've used your 3 free AI-generated tracks for today!</p>
+                <p>Don't worry - we're still creating amazing backing tracks using our advanced audio engine.</p>
+                <button onclick="this.parentElement.parentElement.style.display='none'" class="primary-btn">Continue</button>
+            </div>
+        `, 'info', 10000);
+    }
+
+    showRateLimitMessage() {
+        this.showMessage(`
+            <div class="rate-limit-message">
+                <h4>⏱️ Slow Down There!</h4>
+                <p>You're generating tracks too quickly. Please wait a moment before trying again.</p>
+                <p>This helps us provide the best AI experience for everyone.</p>
+            </div>
+        `, 'warning', 5000);
     }
 
     toggleTrack(track, enabled) {

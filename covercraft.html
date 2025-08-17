@@ -15,6 +15,7 @@
     <script src="js/voice-detection.js"></script>
     <script src="js/audio-engine.js"></script>
     <script src="js/backing-track-generator.js"></script>
+    <script src="js/ai-engine.js"></script>
     <script src="js/covercraft-app.js"></script>
     
     <!-- Register Service Worker -->
@@ -244,13 +245,17 @@
         <!-- Track Generation Screen -->
         <div id="track-generation-screen" class="screen">
             <div class="generation-content">
-                <div class="generation-status">
-                    <div class="generation-icon">🎵</div>
-                    <h3>Creating Your Backing Track</h3>
-                    <p id="generation-status-text">Analyzing song structure...</p>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="generation-progress"></div>
+                <div class="generation-content">
+                    <div class="generation-status">
+                        <h3>Creating Your Backing Track</h3>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="generation-progress"></div>
+                            </div>
+                            <p id="generation-message">Analyzing your song...</p>
+                        </div>
                     </div>
+                    <div id="usage-info" class="usage-info"></div>
                 </div>
                 <div class="generation-steps">
                     <div class="step completed">✓ Song analysis</div>
@@ -570,6 +575,7 @@
     <script src="js/voice-detection.js"></script>
     <script src="js/audio-engine.js"></script>
     <script src="js/backing-track-generator.js"></script>
+    <script src="js/ai-engine.js"></script>
     <script src="js/covercraft-app.js"></script>
     
     <!-- Register Service Worker -->
