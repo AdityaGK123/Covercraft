@@ -218,6 +218,11 @@ class CoverCraftApp {
             });
         });
 
+        // Tempo preview button
+        document.getElementById('preview-tempo')?.addEventListener('click', () => {
+            this.previewTempoInContext();
+        });
+
         // Generate button with proper validation
         document.getElementById('generate-backing-track')?.addEventListener('click', () => {
             if (this.selectedMood && this.selectedGenre) {
@@ -880,6 +885,181 @@ class CoverCraftApp {
         }
     }
 
+    previewRealisticStyle(style) {
+        // Create realistic 20-second instrument previews instead of MIDI
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        const styleInstruments = {
+            'chill': {
+                instruments: ['piano', 'acoustic-guitar', 'soft-strings'],
+                tempo: 80,
+                description: 'Relaxed piano with gentle acoustic guitar'
+            },
+            'emotional': {
+                instruments: ['violin', 'cello', 'piano'],
+                tempo: 70,
+                description: 'Emotional strings with expressive piano'
+            },
+            'energetic': {
+                instruments: ['drums', 'electric-guitar', 'bass'],
+                tempo: 120,
+                description: 'Driving drums with powerful guitar and bass'
+            },
+            'romantic': {
+                instruments: ['piano', 'violin', 'soft-strings'],
+                tempo: 75,
+                description: 'Romantic piano with gentle strings'
+            },
+            'indian-indie': {
+                instruments: ['tabla', 'sitar', 'acoustic-guitar'],
+                tempo: 95,
+                description: 'Modern fusion with traditional Indian instruments'
+            },
+            'bollywood': {
+                instruments: ['tabla', 'harmonium', 'violin'],
+                tempo: 110,
+                description: 'Classic Bollywood arrangement'
+            },
+            'indian-classical': {
+                instruments: ['sitar', 'tanpura', 'tabla'],
+                tempo: 60,
+                description: 'Traditional Indian classical music'
+            },
+            'western-pop': {
+                instruments: ['drums', 'piano', 'electric-guitar'],
+                tempo: 120,
+                description: 'Modern pop arrangement'
+            }
+        };
+        
+        const styleData = styleInstruments[style] || styleInstruments['chill'];
+        
+        this.showMessage(`🎵 Playing ${styleData.description}...`, 'info');
+        
+        // Generate realistic instrument sounds using Web Audio API
+        this.playRealisticInstrumentSample(styleData.instruments, styleData.tempo, 20000); // 20 seconds
+    }
+
+    playRealisticInstrumentSample(instruments, tempo, duration) {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const masterGain = audioContext.createGain();
+        masterGain.connect(audioContext.destination);
+        masterGain.gain.setValueAtTime(0.3, audioContext.currentTime);
+        
+        const beatInterval = 60 / tempo; // seconds per beat
+        const totalBeats = Math.floor(duration / 1000 / beatInterval);
+        
+        instruments.forEach((instrument, index) => {
+            this.playInstrumentTrack(audioContext, masterGain, instrument, beatInterval, totalBeats, index * 0.1);
+        });
+    }
+
+    playInstrumentTrack(audioContext, masterGain, instrument, beatInterval, totalBeats, delay) {
+        const instrumentGain = audioContext.createGain();
+        instrumentGain.connect(masterGain);
+        instrumentGain.gain.setValueAtTime(0.2, audioContext.currentTime);
+        
+        const instrumentFreqs = {
+            'piano': [261.63, 329.63, 392.00, 523.25], // C, E, G, C
+            'acoustic-guitar': [196.00, 246.94, 293.66, 369.99], // G, B, D, F#
+            'electric-guitar': [164.81, 207.65, 246.94, 329.63], // E, G#, B, E
+            'violin': [196.00, 293.66, 440.00, 659.25], // G, D, A, E
+            'cello': [65.41, 98.00, 146.83, 220.00], // C, G, D, A
+            'soft-strings': [130.81, 164.81, 196.00, 246.94], // C, E, G, B
+            'tabla': [80, 120, 160, 200], // Percussion frequencies
+            'sitar': [146.83, 220.00, 293.66, 440.00], // D, A, D, A
+            'tanpura': [98.00, 130.81, 196.00, 261.63], // G, C, G, C
+            'harmonium': [130.81, 164.81, 196.00, 261.63], // C, E, G, C
+            'drums': [60, 80, 100, 120], // Bass drum frequencies
+            'bass': [82.41, 98.00, 110.00, 123.47] // E, G, A, B
+        };
+        
+        const freqs = instrumentFreqs[instrument] || instrumentFreqs['piano'];
+        
+        for (let beat = 0; beat < totalBeats; beat++) {
+            const startTime = audioContext.currentTime + delay + (beat * beatInterval);
+            const freq = freqs[beat % freqs.length];
+            
+            const oscillator = audioContext.createOscillator();
+            const noteGain = audioContext.createGain();
+            
+            oscillator.connect(noteGain);
+            noteGain.connect(instrumentGain);
+            
+            // Different waveforms for different instruments
+            if (instrument.includes('drum') || instrument === 'tabla') {
+                oscillator.type = 'sawtooth';
+            } else if (instrument.includes('string') || instrument === 'violin' || instrument === 'sitar' || instrument === 'cello') {
+                oscillator.type = 'triangle';
+            } else if (instrument.includes('guitar')) {
+                oscillator.type = 'sawtooth';
+            } else {
+                oscillator.type = 'sine';
+            }
+            
+            oscillator.frequency.setValueAtTime(freq, startTime);
+            
+            // Envelope for realistic sound
+            noteGain.gain.setValueAtTime(0, startTime);
+            noteGain.gain.linearRampToValueAtTime(0.8, startTime + 0.05);
+            noteGain.gain.exponentialRampToValueAtTime(0.1, startTime + beatInterval * 0.8);
+            noteGain.gain.linearRampToValueAtTime(0, startTime + beatInterval);
+            
+            oscillator.start(startTime);
+            oscillator.stop(startTime + beatInterval);
+        }
+    }
+
+    previewTempoInContext() {
+        if (!this.selectedMood || !this.selectedGenre) {
+            this.showMessage('Please select mood and style first', 'error');
+            return;
+        }
+        
+        const tempoSlider = document.getElementById('style-tempo-slider');
+        const tempo = tempoSlider ? parseInt(tempoSlider.value) : 120;
+        this.selectedTempo = tempo;
+        
+        this.showMessage(`🎵 Playing tempo ${tempo} BPM in ${this.selectedMood} ${this.selectedGenre} style...`, 'info');
+        
+        // Create a musical context preview with the selected tempo
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const masterGain = audioContext.createGain();
+        masterGain.connect(audioContext.destination);
+        masterGain.gain.setValueAtTime(0.4, audioContext.currentTime);
+        
+        const beatInterval = 60 / tempo;
+        const totalBeats = 16; // 4 bars of 4 beats
+        
+        // Play a simple chord progression in the selected style
+        const chordProgression = [261.63, 329.63, 392.00, 261.63]; // C-E-G-C
+        
+        for (let beat = 0; beat < totalBeats; beat++) {
+            const startTime = audioContext.currentTime + (beat * beatInterval);
+            const chordRoot = chordProgression[Math.floor(beat / 4) % chordProgression.length];
+            
+            // Play chord
+            [chordRoot, chordRoot * 1.25, chordRoot * 1.5].forEach((freq, index) => {
+                const oscillator = audioContext.createOscillator();
+                const noteGain = audioContext.createGain();
+                
+                oscillator.connect(noteGain);
+                noteGain.connect(masterGain);
+                
+                oscillator.type = this.selectedMood === 'emotional' ? 'triangle' : 'sine';
+                oscillator.frequency.setValueAtTime(freq, startTime);
+                
+                noteGain.gain.setValueAtTime(0, startTime);
+                noteGain.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
+                noteGain.gain.exponentialRampToValueAtTime(0.05, startTime + beatInterval * 0.8);
+                noteGain.gain.linearRampToValueAtTime(0, startTime + beatInterval);
+                
+                oscillator.start(startTime + index * 0.02);
+                oscillator.stop(startTime + beatInterval);
+            });
+        }
+    }
+
     setRecordingMode(mode) {
         const videoPreview = document.getElementById('video-preview');
         if (mode === 'audio-only') {
@@ -1079,8 +1259,93 @@ class CoverCraftApp {
         this.showMessage('Upgrade to premium for unlimited covers!', 'info');
     }
 
-    showMessage(message, type = 'info') {
+    showMessage(message, type = 'info', duration = 3000) {
+        // Create toast notification
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `
+            <div class="toast-content">
+                <span class="toast-icon">${this.getToastIcon(type)}</span>
+                <span class="toast-message">${message}</span>
+            </div>
+        `;
+        
+        // Add toast styles if not already present
+        if (!document.getElementById('toast-styles')) {
+            const style = document.createElement('style');
+            style.id = 'toast-styles';
+            style.textContent = `
+                .toast {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 12px 16px;
+                    border-radius: 8px;
+                    color: white;
+                    font-weight: 500;
+                    z-index: 10000;
+                    transform: translateX(100%);
+                    transition: transform 0.3s ease;
+                    max-width: 350px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                }
+                .toast.show {
+                    transform: translateX(0);
+                }
+                .toast-info {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                }
+                .toast-success {
+                    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                }
+                .toast-error {
+                    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+                }
+                .toast-warning {
+                    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                }
+                .toast-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+                .toast-icon {
+                    font-size: 16px;
+                }
+                .toast-message {
+                    font-size: 14px;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(toast);
+        
+        // Show toast
+        setTimeout(() => toast.classList.add('show'), 100);
+        
+        // Hide toast after duration
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                if (document.body.contains(toast)) {
+                    document.body.removeChild(toast);
+                }
+            }, 300);
+        }, duration);
+        
+        // Also log to console for debugging
         console.log(`${type.toUpperCase()}: ${message}`);
+    }
+
+    getToastIcon(type) {
+        const icons = {
+            'info': 'ℹ️',
+            'success': '✅',
+            'error': '❌',
+            'warning': '⚠️'
+        };
+        return icons[type] || icons['info'];
     }
 
     showError(message) {
